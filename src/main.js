@@ -104,7 +104,7 @@ async function registerCallbacks() {
   }
 
   // Light Guide Input
-  if (ext.lightGuideInput) {
+  if (ext.config.lightGuideInputPort) {
     try {
       console.debug(`Light Guide MIDI Input:`.padEnd(30, ' ') + ext.config.lightGuideInputPort)
       ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
