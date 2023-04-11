@@ -22,26 +22,42 @@
 }
 
 #visualization {
-  /* background: #EEE; */
-  /* border: 5px solid #333; */
   border-radius: 3px;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 
 #visualization .column {
   text-align: center;
 }
 
+#visualization .column>:first-child  {
+  margin-left: 0 !important;
+}
+
 #visualization .cell {
-  background: #f3f3f3;
-  color: #333;
+  background: #f2f2f2;
+  /* border: 2px solid #ebebeb; */
+  color: #000;
   font-size: 0.8em;
-  margin-left: 6px;
-  margin-top: 6px;
+  margin-left: 4px;
+  margin-top: 4px;
   display: inline-flex;
   justify-content: center;
   align-content: center;
   flex-direction: column;
+}
+
+#visualization .note-name-C {
+  background-color: #e5f3ff;
+}
+#visualization .note-name-D,
+#visualization .note-name-E,
+#visualization .note-name-F,
+#visualization .note-name-G,
+#visualization .note-name-A,
+#visualization .note-name-B
+ {
+  background-color: #e5ffe0;
 }
 
 #visualization .highlight {
@@ -54,49 +70,33 @@
   height: 16px;
 }
 #visualization .highlight-1 {
-  background-color: rgba(255, 0, 0, 0.238);
+  background-color: rgba(255, 0, 0, 0.35);
 }
 #visualization .highlight-2 {
-  background-color: rgba(255, 225, 0, 0.238);
+  background-color: rgba(255, 225, 0, 0.35);
 }
 #visualization .highlight-3 {
-  background-color: rgba(68, 255, 0, 0.238);
+  background-color: rgba(68, 255, 0, 0.35);
 }
 #visualization .highlight-4 {
-  background-color: rgba(0, 255, 251, 0.238);
+  background-color: rgba(0, 255, 251, 0.35);
 }
 #visualization .highlight-5 {
-  background-color: rgba(0, 89, 255, 0.238);
+  background-color: rgba(0, 89, 255, 0.35);
 }
 #visualization .highlight-6 {
-  background-color: rgba(247, 0, 255, 0.238);
+  background-color: rgba(247, 0, 255, 0.35);
 }
 #visualization .highlight-9 {
-  background-color: rgba(255, 255, 255, 0.238);
+  background-color: rgba(255, 255, 255, 0.35);
 }
 #visualization .highlight-10 {
-  background-color: rgba(179, 255, 0, 0.281);
+  background-color: rgba(179, 255, 0, 0.35);
 }
 #visualization .highlight-11 {
-  background-color: rgba(255, 0, 162, 0.281);
+  background-color: rgba(255, 0, 162, 0.35);
 }
 
-#visualization .note-name-C {
-  background-color: #cde7ff;
-}
-#visualization .note-name-D,
-#visualization .note-name-E,
-#visualization .note-name-F,
-#visualization .note-name-G,
-#visualization .note-name-A,
-#visualization .note-name-B
- {
-  background-color: #d5ffcd;
-}
-
-#visualization .column>:first-child  {
-  margin-left: 0 !important;
-}
 
 .form-label {
   /* margin-top: .5rem; */
