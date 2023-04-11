@@ -48,7 +48,6 @@ async function registerCallbacks() {
   const inputElements = document.getElementsByTagName("input")
   for (const el of inputElements) {
     el.addEventListener("focusout", (event) => {
-      console.log('save config')
       saveConfig(ext.config, event)
     });
   }
@@ -64,7 +63,7 @@ async function registerCallbacks() {
   // Instrument Input
   if (ext.config.instrumentInputPort) {
     try {
-      console.debug(`LinnStrument MIDI Input:`.padEnd(30, ' ') + ext.config.instrumentInputPort)
+      log.info(`Connecting LinnStrument MIDI Input: ${ext.config.instrumentInputPort}`)
       ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
       ext.input.addListener("noteon", (note) => {
         const noteNumber = note.dataBytes[0]
@@ -93,7 +92,7 @@ async function registerCallbacks() {
 
   if (ext.config.instrumentOutputPort) {
     try {
-      console.debug(`LinnStrument MIDI Output:`.padEnd(30, ' ') + ext.config.instrumentOutputPort)
+      log.info(`Connecting LinnStrument MIDI Output: ${ext.config.instrumentOutputPort}`)
       ext.output = WebMidi.getOutputByName(ext.config.instrumentOutputPort)
     } catch (err) {
       log.error(`Could not open Instrument Output Port: ${ext.config.instrumentInputPort}`)
@@ -105,7 +104,7 @@ async function registerCallbacks() {
   // Light Guide Input
   if (ext.config.lightGuideInputPort) {
     try {
-      console.debug(`Light Guide MIDI Input:`.padEnd(30, ' ') + ext.config.lightGuideInputPort)
+      log.info(`Connecting Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
       ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
       ext.lightGuideInput.addListener("noteon", (note) => {
         const noteNumber = note.dataBytes[0]
@@ -140,7 +139,7 @@ async function registerCallbacks() {
       try {
         ext.forwardPort1 = WebMidi.getOutputByName(ext.config.forwardPort1)
         ext.input.addForwarder(ext.forwardPort1)
-        log.info(`MIDI Forward Port 1:`.padEnd(30, ' ') + ext.config.forwardPort1)
+        log.info(`Connecting MIDI Forward Port 1: ${ext.config.forwardPort1}`)
       } catch (err) {
         log.warn(`Could not open optional Forward Port 1: ${ext.config.forwardPort1}`)
       }
@@ -150,7 +149,7 @@ async function registerCallbacks() {
       try {
         ext.forwardPort2 = WebMidi.getOutputByName(ext.config.forwardPort2)
         ext.input.addForwarder(ext.forwardPort2)
-        log.info(`MIDI Forward Port 2:`.padEnd(30, ' ') + ext.config.forwardPort2)
+        log.info(`Connecting MIDI Forward Port 2: ${ext.config.forwardPort2}`)
       } catch (err) {
         log.warn(`Could not open optional Forward Port 2: ${ext.config.forwardPort2}`)
       }
@@ -159,6 +158,7 @@ async function registerCallbacks() {
     log.warn(`No Instrument input found, cannot forward MIDI from it.`)
   }
 
+  return
 }
 
 //////////////////////////////////////////

@@ -9,6 +9,10 @@ In principle this app could work with any program that sends Light Guide MIDI in
 
 ![Synthesia Light Guide](./assets/linnstrument-synthesia-light-guide.jpg)
 
+It can also be used in general to visualize the grid layout and how it is played. 
+
+![Screenshot](./assets/screenshot.png)
+
 ## User Guide
 
 Setting this up with Synthesia is a big fiddly, as it needs a few MIDI loop devices to route MIDI information from and to the right places.
