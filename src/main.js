@@ -1,5 +1,6 @@
 import { log } from "./log.js";
 import { initConfig, resetConfig, saveConfig } from "./config.js";
+import { resetGrid, getGridDict, generateGrid, drawGrid } from "./grid.js";
 
 /**
  * Global namespace
@@ -12,11 +13,10 @@ const ext = {
   },
   stats: {},
 }
-
 window.ext = ext
 
 //////////////////////////////////////////
-// OPTIONS                              //
+// INIT                                 //
 //////////////////////////////////////////
 
 WebMidi.enable().then(init).catch(console.error);
@@ -24,80 +24,143 @@ WebMidi.enable().then(init).catch(console.error);
 // Function triggered when WEBMIDI.js is ready
 async function init() {
 
+  // Load Config
   ext.config = initConfig()
-
-  console.debug(`LinnStrument MIDI Input:`.padEnd(30, ' ') + ext.config.instrumentInputPort)
-  ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
-  console.debug(`LinnStrument MIDI Output:`.padEnd(30, ' ') + ext.config.instrumentOutputPort)
-  ext.output = WebMidi.getOutputByName(ext.config.instrumentOutputPort)
-  console.debug(`Light Guide MIDI Input:`.padEnd(30, ' ') + ext.config.lightGuideInputPort)
-  ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
-
-  resetGrid()
-
-  ext.grid = generateGrid(ext.config.rowOffset, ext.config.startNoteNumber)
-
+  
+  // Setup MIDI callbacks / event listeners
   await registerCallbacks()
+
+  // Setup Grid
+  resetGrid()
+  ext.grid = generateGrid(ext.config.startNoteNumber, ext.config.rowOffset, ext.config.colOffset)
+  ext.gridDict = getGridDict(ext.grid, ext.config.startNoteNumber)
+  drawGrid(ext.grid)
 
   log.info(`Successfully initialized.`)
 }
 
 
 async function registerCallbacks() {
-
   // UI Buttons Listeners
   document.getElementById("save").addEventListener("click", (event) => {
     saveConfig(ext.config, event)
   });
+  const inputElements = document.getElementsByTagName("input")
+  for (const el of inputElements) {
+    el.addEventListener("focusout", (event) => {
+      console.log('save config')
+      saveConfig(ext.config, event)
+    });
+  }
   document.getElementById("reset").addEventListener("click", (event) => {
     resetConfig(event)
   });
 
-  // Light Guide Input
-  try {
-    ext.lightGuideInput.addListener("noteon", (msg) => {
-      const note = msg.dataBytes[0]
-      ext.history.guideNotes.push({
-        time: Date.now(),
-        note: note,
-        full: msg,
-      })
-      let logMsg = `Guide Note: ${note.toString().padStart(3, '0')} | Highlighted on:`
-      const noteCoords = ext.grid[note]
-      for (const noteCoord of noteCoords) {
-        highlightNote(noteCoord[0], noteCoord[1], ext.config.highlightColor)
-        logMsg += ` [${noteCoord[0].toString().padStart(2, '0')}, ${noteCoord[1].toString().padStart(2, '0')}]`
-      }
-      log.info(logMsg)
-    });
-    ext.lightGuideInput.addListener("noteoff", (msg) => {
-      const note = msg.dataBytes[0]
-      const noteCoords = ext.grid[note]
-      for (const noteCoord of noteCoords) {
-        highlightNote(noteCoord[0], noteCoord[1], 0)
-      }
-    });
-  } catch (err) {
-    log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
-    log.error(err.toString())
-    console.error(err)
+  // UI Resize trigger
+  window.addEventListener("resize", debounce(() => {
+    drawGrid(ext.grid)
+  }, 200 ));
+
+  // Instrument Input
+  if (ext.config.instrumentInputPort) {
+    try {
+      console.debug(`LinnStrument MIDI Input:`.padEnd(30, ' ') + ext.config.instrumentInputPort)
+      ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
+      ext.input.addListener("noteon", (note) => {
+        const noteNumber = note.dataBytes[0]
+        ext.history.playedNotes.push({
+          time: Date.now(),
+          note: noteNumber,
+          full: note,
+        })
+        highlightVisualization(noteNumber, 1)
+
+      });
+      ext.input.addListener("noteoff", (note) => {
+        setTimeout(() => {
+          highlightVisualization(note.dataBytes[0], 0)
+        }, ext.config.fadeOutDelay);
+      });
+
+
+    } catch (err) {
+      log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
+      log.error(err.toString())
+      console.error(err)
+    }
+  } else {
+    log.error(`No Instrument Input Port given.`)
   }
 
+  if (ext.config.instrumentOutputPort) {
+    try {
+      console.debug(`LinnStrument MIDI Output:`.padEnd(30, ' ') + ext.config.instrumentOutputPort)
+      ext.output = WebMidi.getOutputByName(ext.config.instrumentOutputPort)
+    } catch (err) {
+      log.error(`Could not open Instrument Output Port: ${ext.config.instrumentInputPort}`)
+    }
+  } else {
+    log.warn(`No Instrument Output Port given. Without this, Light Guide highlighting will not work.`)
+  }
+
+  // Light Guide Input
+  if (ext.lightGuideInput) {
+    try {
+      console.debug(`Light Guide MIDI Input:`.padEnd(30, ' ') + ext.config.lightGuideInputPort)
+      ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
+      ext.lightGuideInput.addListener("noteon", (note) => {
+        const noteNumber = note.dataBytes[0]
+        ext.history.guideNotes.push({
+          time: Date.now(),
+          note: noteNumber,
+          full: note,
+        })
+        highlightInstrument(noteNumber, ext.config.highlightColor)
+        highlightVisualization(noteNumber, ext.config.highlightColor, 'guide', true)
+      });
+  
+      ext.lightGuideInput.addListener("noteoff", (note) => {
+        const noteNumber = note.dataBytes[0]
+        setTimeout(() => {
+          highlightInstrument(noteNumber, 0)
+          highlightVisualization(noteNumber, 0, 'guide')
+        }, ext.config.fadeOutDelay);
+      });
+    } catch (err) {
+      log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
+      log.error(err.toString())
+      console.error(err)
+    }  
+  } else {
+    log.warn(`No Light Guide MIDI input. The Light Guide Feature will not work.`)
+  }
 
   // Forward Instrument Input
-  ext.forwardPort1 = WebMidi.getOutputByName(ext.config.forwardPort1)
-  ext.input.addForwarder(ext.forwardPort1)
-  console.debug(`MIDI Forward Port 1:`.padEnd(30, ' ') + ext.config.forwardPort1)
+  if (ext.input) {
 
-  if (ext.config.forwardPort2) {
-    try {
-      ext.forwardPort2 = WebMidi.getOutputByName(ext.config.forwardPort2)
-      ext.input.addForwarder(ext.forwardPort2)
-      console.debug(`MIDI Forward Port 2:`.padEnd(30, ' ') + ext.config.forwardPort2)
-    } catch (err) {
-      log.warn(`Could not open optional Forward Port 2: ${ext.config.forwardPort2}`)
+    if (ext.config.forwardPort1) {
+      try {
+        ext.forwardPort1 = WebMidi.getOutputByName(ext.config.forwardPort1)
+        ext.input.addForwarder(ext.forwardPort1)
+        log.info(`MIDI Forward Port 1:`.padEnd(30, ' ') + ext.config.forwardPort1)
+      } catch (err) {
+        log.warn(`Could not open optional Forward Port 1: ${ext.config.forwardPort1}`)
+      }
     }
+  
+    if (ext.config.forwardPort2) {
+      try {
+        ext.forwardPort2 = WebMidi.getOutputByName(ext.config.forwardPort2)
+        ext.input.addForwarder(ext.forwardPort2)
+        log.info(`MIDI Forward Port 2:`.padEnd(30, ' ') + ext.config.forwardPort2)
+      } catch (err) {
+        log.warn(`Could not open optional Forward Port 2: ${ext.config.forwardPort2}`)
+      }
+    }
+  } else {
+    log.warn(`No Instrument input found, cannot forward MIDI from it.`)
   }
+
 
 }
 
@@ -105,67 +168,68 @@ async function registerCallbacks() {
 // HELPER FUNCTIONS                     //
 //////////////////////////////////////////
 
-function highlightNote(x, y, color) {
-  // console.debug(`Highlighting`, x.toString().padStart(2, '0'), y.toString().padStart(2, '0'), color)
-  const channel = ext.output.channels[1]
-  channel.sendControlChange(20, x);
-  channel.sendControlChange(21, y);
-  channel.sendControlChange(22, color);
+/**
+ * Highlight pads on instrument by note number and color
+ */
+export function highlightInstrument(noteNumber, color) {
+  const noteCoords = ext.gridDict[noteNumber]
+  for (const noteCoord of noteCoords) {
+    highlightInstrumentXY(noteCoord[0], noteCoord[1], color)
+  }
 }
 
 /**
- * Calculate the grid for the LinnStrument
- * where each MIDI note can be found by x and y coordinates
+ * Highlight pads on instrument by x / y coordinates and color
  * 
- * @param rowOffset How many half tone steps the layout has
- * @param startNoteNumber Which midi note the grid starts with (bottom left corner)
- * @returns 
+ * Will only work if we have Instrument Output port
  */
-function generateGrid(rowOffset = 5, startNoteNumber = 30) {
-
-  const columns = ext.config.linnStrumentSize / 8
-
-  // First generate the grid with the note numbers as it is on the LinnStrument
-  const grid = []
-
-  for (let x = 0; x <= columns; x++) {
-    grid[x] = []
-    for (let y = 0; y <= 7; y++) {
-      grid[x][y] = startNoteNumber + x + (y * rowOffset)
-    }
+export function highlightInstrumentXY(x, y, color) {
+  if (ext.output) {
+    const channel = ext.output.channels[1]
+    channel.sendControlChange(20, x + 1); // Add one because 0 is settings
+    channel.sendControlChange(21, y);
+    channel.sendControlChange(22, color);
   }
-
-  // Now create a dictionary that lists me all grid coordinates for a given note
-  // This is used to speed up the access to find the coordinates
-  const gridDict = {}
-
-  for (let note = startNoteNumber; note <= 127; note++) {
-    gridDict[note] = []
-    for (let x = 0; x <= columns; x++) {
-      for (let y = 0; y <= 7; y++) {
-        if (grid[x][y] === note) {
-          gridDict[note].push([x + 1, y])
-        }
-      }
-    }
-  }
-
-  console.debug(`Generated Grid with start note="${startNoteNumber}" and row offset=${rowOffset}`, grid)
-
-  return gridDict;
 }
 
 /**
- * Helper function that resets all color highlights from the grid
- * by brute force
+ * Highlight pads on web visualization by note number and color
  */
-function resetGrid() {
-  const columns = ext.config.linnStrumentSize / 8
-  for (let x = 0; x <= columns; x++) {
-    for (let y = 0; y <= 7; y++) {
-      highlightNote(x, y, 0)
+export function highlightVisualization(noteNumber, color, type = "played", big = false) {
+
+  const noteCoords = ext.gridDict[noteNumber]
+  for (const noteCoord of noteCoords) {
+    const x = noteCoord[0]
+    const y = noteCoord[1]
+
+    if (color === 0) {
+      const cell = document.getElementById(`highlight-${type}-${x}-${y}`)
+      if (cell) {
+        cell.parentNode.removeChild(cell);
+      }
+    } else {
+      const cell = document.getElementById(`cell-${x}-${y}`)
+      const size = cell.offsetWidth
+  
+      const highlightEl = document.createElement('span')
+      highlightEl.id = `highlight-${type}-${x}-${y}`
+      highlightEl.className = `highlight highlight-${type} highlight-${color}`
+      if (big) {
+        highlightEl.style = `height: ${size - 6}px; width: ${size - 6}px; margin-left: ${3}px;`
+      } else {
+        highlightEl.style = `height: ${size / 2}px; width: ${size / 2}px; margin-left: ${size / 4}px;`
+      }
+    
+      cell.prepend(highlightEl)
     }
   }
 }
 
-
+function debounce(func, time){
+  var time = time || 100; // 100 by default if no param
+  var timer;
+  return function(event){
+      if(timer) clearTimeout(timer);
+      timer = setTimeout(func, time, event);
+  };
+}

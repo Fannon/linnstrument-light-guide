@@ -15,8 +15,94 @@
   margin-bottom: 3px;
 }
 .log-warn .msg {
-  color: orange;
+  color: #ef9d08;
 }
 .log-error .msg {
-  color: red;
+  color: #b61a1a;
+}
+
+#visualization {
+  /* background: #EEE; */
+  /* border: 5px solid #333; */
+  border-radius: 3px;
+  padding-bottom: 6px;
+}
+
+#visualization .column {
+  text-align: center;
+}
+
+#visualization .cell {
+  background: #f3f3f3;
+  color: #333;
+  font-size: 0.8em;
+  margin-left: 6px;
+  margin-top: 6px;
+  display: inline-flex;
+  justify-content: center;
+  align-content: center;
+  flex-direction: column;
+}
+
+#visualization .highlight {
+  display: block;
+  position: absolute;
+  /* animation: fade 0.2s linear; */
+  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.238);
+  width: 16px;
+  height: 16px;
+}
+#visualization .highlight-1 {
+  background-color: rgba(255, 0, 0, 0.238);
+}
+#visualization .highlight-2 {
+  background-color: rgba(255, 225, 0, 0.238);
+}
+#visualization .highlight-3 {
+  background-color: rgba(68, 255, 0, 0.238);
+}
+#visualization .highlight-4 {
+  background-color: rgba(0, 255, 251, 0.238);
+}
+#visualization .highlight-5 {
+  background-color: rgba(0, 89, 255, 0.238);
+}
+#visualization .highlight-6 {
+  background-color: rgba(247, 0, 255, 0.238);
+}
+#visualization .highlight-9 {
+  background-color: rgba(255, 255, 255, 0.238);
+}
+#visualization .highlight-10 {
+  background-color: rgba(179, 255, 0, 0.281);
+}
+#visualization .highlight-11 {
+  background-color: rgba(255, 0, 162, 0.281);
+}
+
+#visualization .note-name-C {
+  background-color: #cde7ff;
+}
+#visualization .note-name-D,
+#visualization .note-name-E,
+#visualization .note-name-F,
+#visualization .note-name-G,
+#visualization .note-name-A,
+#visualization .note-name-B
+ {
+  background-color: #d5ffcd;
+}
+
+#visualization .column>:first-child  {
+  margin-left: 0 !important;
+}
+
+.form-label {
+  /* margin-top: .5rem; */
+  margin-bottom: .2rem;
+}
+
+select, input {
+  margin-bottom: .5rem;
 }
