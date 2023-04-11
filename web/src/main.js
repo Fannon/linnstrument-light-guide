@@ -99,8 +99,6 @@ async function registerCallbacks() {
     }
   }
 
-  document.getElementById('loading-status').innerHTML = `<span class="badge bg-success">Initialized.</span>`;
-
 }
 
 //////////////////////////////////////////

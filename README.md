@@ -9,7 +9,9 @@ LinnStrument is not directly supported, but with this script it's still possible
 
 ### How to use
 
-Setting this up is a big fiddly. This is also in part due to how there are many MIDI ports and loops needed to route MIDI information from and to the right places.
+Setting this up is a big fiddly. 
+This is also in part due to how there are many MIDI ports and loops needed to route MIDI information from and to the right places.
+Personally, I'm using a DAW to hear my own notes, the synthesia notes and drums / metronome with low latency.
 
 * You need to have a virtual MIDI Loop Device (e.g. loopMIDI) where Synthesia sends KeyLights to the Output.
   * On Windows you can use a tool like [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html)
@@ -40,9 +42,10 @@ Setting this up is a big fiddly. This is also in part due to how there are many 
   * Optional: Send "Background" to `Loop Back A`.
   * Optional: Send "Percussion, Metronome" to `Loop Back B`.
 
-![Synthesia Output Config](./assets/synthesia-out.png)
+![Synthesia Output Config](./assets/synthesia-output.png)
 
-Now everything should be ready. Start the webapp at https://fannon.github.io/linnstrument-synthesia-light-guide/ 
+Now everything should be ready. Start the webapp at https://fannon.github.io/linnstrument-synthesia-light-guide/.
+Make sure to use a modern browser that supports WebMIDI like Google Chrome or MS Edge.
 
 Make sure that the configuration is correct and matches your MIDI input and output ports.
 

@@ -4,7 +4,7 @@
   "description": "Synthesia Light Guide support for the LinnStrument",
   "main": "index.js",
   "scripts": {
-    "deploy": "gh-pages -d ./web",
+    "deploy": "gh-pages -d ./web && echo https://fannon.github.io/linnstrument-synthesia-light-guide/",
     "start": "live-server ./web"
   },
   "author": "Simon Heimler",
