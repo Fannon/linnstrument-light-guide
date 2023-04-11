@@ -5,7 +5,7 @@
 [Synthesia](https://synthesiagame.com/) offers a "Light Guide" feature for some keyboards.
 LinnStrument is not directly supported, but with this script it's still possible to have it.
 
-![Synthesia Light Guide](./assets/synthesia-light-guide.png)
+![Synthesia Light Guide](./assets/linnstrument-synthesia-light-guide.jpg)
 
 ### How to use
 
