@@ -15,7 +15,7 @@ export function generateGrid(startNoteNumber = 30, rowOffset = 5, colOffset = 1)
   // First generate the grid with the note numbers as it is on the LinnStrument
   const grid = []
 
-  for (let x = 0; x <= columns; x++) {
+  for (let x = 0; x < columns; x++) {
     grid[x] = []
     for (let y = 0; y <= 7; y++) {
       grid[x][y] = startNoteNumber + x * colOffset + (y * rowOffset)
