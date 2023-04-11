@@ -1,0 +1,19 @@
+{
+  "name": "linnstrument-synthesia-light-guide",
+  "version": "0.1.0",
+  "description": "Synthesia Light Guide support for the LinnStrument",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "gh-pages -d ./web",
+    "start": "live-server ./web"
+  },
+  "author": "Simon Heimler",
+  "license": "MIT",
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "gh-pages": "^5.0.0",
+    "live-server": "^1.2.2"
+  }
+}

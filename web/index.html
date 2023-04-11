@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LinnStrument Light Guide</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link rel="stylesheet" href="./css/style.css" />
+  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
+</head>
+
+<body>
+  <div class="container py-3">
+    <header>
+      <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+        <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
+          <title><strong>LinnStrument Light Guide</strong></title>
+          <span class="fs-4">LinnStrument Light Guide&nbsp;</span>
+          
+          <span id="loading-status" class=""><span class="badge bg-secondary">Loading...</span></span>
+        </a>
+
+        <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
+          <a class="me-3 py-2 text-dark text-decoration-none" target="_blank"
+            href="https://github.com/Fannon/linnstrument-playground">GitHub & Documentation</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="row text-left">
+        <div class="col">
+          <h3>Documentation</h3>
+          <div>Please read the GitHub documentation.</div>
+          <br>
+        </div>
+      </div>
+      <div class="row text-left">
+        <div class="col-5">
+          <h3>General Configuration</h3>
+          <form>
+            <div class="mb-3">
+              <label for="startNoteNumber" class="form-label">Start MIDI Note Number</label>
+              <input id="startNoteNumber" class="form-control" type="text" placeholder="30">
+
+              <label for="rowOffset" class="form-label">Row Offset</label>
+              <input id="rowOffset" class="form-control" type="text" placeholder="5">
+
+              <label for="highlightColor" class="form-label">Highlight Color</label>
+              <select id="highlightColor" class="form-select" >
+                <option value="0" selected>As set in Note Lights settings</option>
+                <option value="1">Red</option>
+                <option value="2">Yellow</option>
+                <option value="3">Green</option>
+                <option value="4">Cyan</option>
+                <option value="5">Blue</option>
+                <option value="6">Magenta</option>
+                <option value="7">Off</option>
+                <option value="8">White</option>
+                <option value="9">Orange</option>
+                <option value="10">Lime</option>
+                <option value="11">Pink</option>
+              </select>
+
+              <label for="linnStrumentSize" class="form-label">LinnStrument Size</label>
+              <select id="linnStrumentSize" class="form-select" >
+                <option selected>128</option>
+                <option>200</option>
+              </select>
+
+            </div>
+          </form>
+          <h3>MIDI Port Configuration</h3>
+          <form>
+            <div class="mb-3">
+              <label for="instrumentInputPort" class="form-label"><strong>Input</strong>: LinnStrument</label>
+              <select id="instrumentInputPort" class="form-select" ></select>
+              <!-- <div class="form-text">Select LinnStrument input MIDI port</div> -->
+
+              <label for="lightGuideInputPort" class="form-label"><strong>Input</strong>: Synthesia Light Guide</label>
+              <select id="lightGuideInputPort" class="form-select" ></select>
+              <div class="form-text">MIDI port where Synthesia sends Light MIDI data (Finger based Channel)</div>
+              
+              <label for="instrumentOutputPort" class="form-label"><strong>Output</strong>: LinnStrument</label>
+              <select id="instrumentOutputPort" class="form-select" ></select>
+              <!-- <div class="form-text">Select LinnStrument output MIDI port</div> -->
+
+              <label for="forwardPort1" class="form-label"><strong>Forward</strong>: MIDI Thru 1</label>
+              <select id="forwardPort1" class="form-select" ></select>
+              <!-- <div class="form-text">Forwards LinnStrument MIDI to this port.</div> -->
+
+              <label for="forwardPort2" class="form-label"><strong>Output Port</strong>: MIDI Thru 2 (optional)</label>
+              <select id="forwardPort2" class="form-select" ></select>
+              <!-- <div class="form-text">Forwards LinnStrument MIDI to this port (optional).</div> -->
+
+            </div>
+          </form>
+          <button type="button" id="save" class="btn btn-success">Save</button>
+          <button type="button" id="reset" class="btn btn-danger">Reset</button>
+        </div>
+        <div class="col-7">
+          <h3>Logs</h3>
+          <div id="log"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="pt-4 my-md-5 pt-md-5 border-top">
+
+    </footer>
+  </div>
+  <script src="./src/main.js" type="module"></script>
+  <style>
+    
+  </style>
+</body>
+
+</html>

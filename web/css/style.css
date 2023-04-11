@@ -1,0 +1,19 @@
+#log {
+  height: 800px;
+  overflow-y: scroll;
+  border: 1px solid #CCC;
+  border-radius: 3px;
+  margin: 5px;
+}
+
+.log-entry {
+  background: #ebebeb;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+}
+.log-warn .msg {
+  color: orange;
+}
+.log-error .msg {
+  color: red;
+}
