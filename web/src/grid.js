@@ -68,7 +68,9 @@ export function resetGrid() {
 }
 
 export function drawGrid(grid) {
+  grid = grid || window.ext.grid
   const v = document.getElementById('visualization')
+  v.innerHTML = ''
   const cols = grid[0].length
   const rows = grid.length
   const padSize = Math.floor(v.offsetWidth / rows) - 7;

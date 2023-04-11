@@ -56,6 +56,12 @@ async function registerCallbacks() {
     resetConfig(event)
   });
 
+  // UI Resize trigger
+  window.addEventListener("resize", debounce(() => {
+    drawGrid(ext.grid)
+  }, 200 ));
+
+
   // Instrument Input
   try {
     
@@ -183,4 +189,13 @@ export function highlightVisualization(x, y, color, type = "played", big = false
     cell.appendChild(highlightEl)
   }
 
+}
+
+function debounce(func, time){
+  var time = time || 100; // 100 by default if no param
+  var timer;
+  return function(event){
+      if(timer) clearTimeout(timer);
+      timer = setTimeout(func, time, event);
+  };
 }
