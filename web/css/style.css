@@ -15,10 +15,10 @@
   margin-bottom: 3px;
 }
 .log-warn .msg {
-  color: orange;
+  color: #ef9d08;
 }
 .log-error .msg {
-  color: red;
+  color: #b61a1a;
 }
 
 #visualization {
@@ -34,7 +34,7 @@
 
 #visualization .cell {
   background: #f3f3f3;
-  color: #777;
+  color: #333;
   font-size: 0.8em;
   margin-left: 6px;
   margin-top: 6px;
@@ -98,8 +98,11 @@
   margin-left: 0 !important;
 }
 
+.form-label {
+  /* margin-top: .5rem; */
+  margin-bottom: .2rem;
+}
 
-@keyframes fade {
-  0%,100% { opacity: 0 }
-  50% { opacity: 1 }
+select, input {
+  margin-bottom: .5rem;
 }

@@ -5,6 +5,9 @@
 [Synthesia](https://synthesiagame.com/) offers a "Light Guide" feature for some keyboards.
 LinnStrument is not directly supported, but with this script it's still possible to have it.
 
+In principle this tool could work with any program that sends Light Guide MIDI information. 
+The script assumes that the Light Guide MIDI input port sends note-on and note-off messages. 
+
 ![Synthesia Light Guide](./assets/linnstrument-synthesia-light-guide.jpg)
 
 ### How to use

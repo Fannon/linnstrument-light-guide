@@ -1,4 +1,4 @@
-import { highlightInstrument } from "./main.js"
+import { highlightInstrumentXY } from "./main.js"
 
 /**
  * Calculate the grid for the LinnStrument
@@ -8,7 +8,7 @@ import { highlightInstrument } from "./main.js"
  * @param startNoteNumber Which midi note the grid starts with (bottom left corner)
  * @returns 
  */
-export function generateGrid(rowOffset = 5, startNoteNumber = 30) {
+export function generateGrid(startNoteNumber = 30, rowOffset = 5, colOffset = 1) {
 
   const columns = ext.config.linnStrumentSize / 8
 
@@ -18,7 +18,7 @@ export function generateGrid(rowOffset = 5, startNoteNumber = 30) {
   for (let x = 0; x <= columns; x++) {
     grid[x] = []
     for (let y = 0; y <= 7; y++) {
-      grid[x][y] = startNoteNumber + x + (y * rowOffset)
+      grid[x][y] = startNoteNumber + x * colOffset + (y * rowOffset)
     }
   }
 
@@ -59,7 +59,7 @@ export function resetGrid() {
   const columns = ext.config.linnStrumentSize / 8
   for (let x = 0; x <= columns; x++) {
     for (let y = 0; y <= 7; y++) {
-      highlightInstrument(x, y, 0)
+      highlightInstrumentXY(x, y, 0)
     }
   }
 

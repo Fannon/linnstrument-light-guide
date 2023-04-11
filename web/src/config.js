@@ -10,6 +10,7 @@ export const defaultConfig = {
   highlightColor: 6,
   linnStrumentSize: 128,
   rowOffset: 5,
+  colOffset: 1,
   startNoteNumber: 30,
 
   // Advanced Options (no UI yet)
@@ -33,6 +34,7 @@ export function initConfig() {
 
   document.getElementById('startNoteNumber').value = config.startNoteNumber.toString()
   document.getElementById('rowOffset').value = config.rowOffset.toString()
+  document.getElementById('colOffset').value = config.colOffset.toString()
   document.getElementById('highlightColor').value = config.highlightColor.toString()
   document.getElementById('linnStrumentSize').value = config.linnStrumentSize.toString()
 
@@ -74,9 +76,6 @@ export function initConfig() {
     document.getElementById('forwardPort1').add(option)
   });
   // forwardPort2
-  const noValue = document.createElement("option");
-  noValue.text = ''; 
-  document.getElementById('forwardPort2').add(noValue)
   WebMidi.outputs.forEach((device) => {
     const option = document.createElement("option");
     option.text = device.name; 
@@ -98,6 +97,7 @@ export function saveConfig(config, event) {
 
   config.startNoteNumber = parseInt(document.getElementById("startNoteNumber").value);
   config.rowOffset = parseInt(document.getElementById("rowOffset").value);
+  config.colOffset = parseInt(document.getElementById("colOffset").value);
   config.highlightColor = parseInt(document.getElementById("highlightColor").value);
   config.linnStrumentSize = parseInt(document.getElementById("linnStrumentSize").value);
 

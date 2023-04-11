@@ -54,6 +54,9 @@
                 <label for="rowOffset" class="form-label">Row Offset</label>
                 <input id="rowOffset" class="form-control" type="text" placeholder="5">
 
+                <label for="colOffset" class="form-label">Column Offset (unofficial)</label>
+                <input id="colOffset" class="form-control" type="text" placeholder="1">
+
                 <label for="highlightColor" class="form-label">Highlight Color</label>
                 <select id="highlightColor" class="form-select">
                   <option value="0" selected>As set in Note Lights settings</option>
@@ -88,28 +91,37 @@
                 <select id="instrumentInputPort" class="form-select"></select>
                 <!-- <div class="form-text">Select LinnStrument input MIDI port</div> -->
 
-                <label for="lightGuideInputPort" class="form-label"><strong>Input</strong>: Synthesia Light
-                  Guide</label>
-                <select id="lightGuideInputPort" class="form-select"></select>
-                <div class="form-text">MIDI port where Synthesia sends Light MIDI data (Finger based Channel)</div>
-
                 <label for="instrumentOutputPort" class="form-label"><strong>Output</strong>: LinnStrument</label>
                 <select id="instrumentOutputPort" class="form-select"></select>
                 <!-- <div class="form-text">Select LinnStrument output MIDI port</div> -->
 
-                <label for="forwardPort1" class="form-label"><strong>Forward</strong>: MIDI Thru 1</label>
-                <select id="forwardPort1" class="form-select"></select>
+                <label for="lightGuideInputPort" class="form-label"><strong>Input</strong>: Light
+                  Guide <small class="text-muted">(optional)</small></label>
+                <select id="lightGuideInputPort" class="form-select">
+                  <option value=""></option>
+                </select>
+                <!-- <div class="form-text">MIDI port for incoming Light Guide MIDI notes.</div> -->
+
+                <label for="forwardPort1" class="form-label"><strong>Forward</strong>: MIDI Thru 1 <small
+                    class="text-muted">(optional)</small>
+                </label>
+                <select id="forwardPort1" class="form-select">
+                  <option value=""></option>
+                </select>
                 <!-- <div class="form-text">Forwards LinnStrument MIDI to this port.</div> -->
 
-                <label for="forwardPort2" class="form-label"><strong>Forward</strong>: MIDI Thru 2 (optional)</label>
-                <select id="forwardPort2" class="form-select"></select>
+                <label for="forwardPort2" class="form-label"><strong>Forward</strong>: MIDI Thru 2 <small
+                    class="text-muted">(optional)</small></label>
+                <select id="forwardPort2" class="form-select">
+                  <option value=""></option>
+                </select>
                 <!-- <div class="form-text">Forwards LinnStrument MIDI to this port (optional).</div> -->
               </form>
             </div>
           </div>
 
-          <button type="button" id="save" class="btn btn-success">Save</button>
-          <button type="button" id="reset" class="btn btn-danger">Reset</button>
+          <button type="button" id="save" class="btn btn-success">Save Config</button>
+          <button type="button" id="reset" class="btn btn-danger">Reset Config</button>
         </div>
         <div class="col-7">
           <div class="card text-dark bg-light mb-3">
