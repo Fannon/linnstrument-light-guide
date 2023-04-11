@@ -67,7 +67,6 @@ async function registerCallbacks() {
       console.debug(`LinnStrument MIDI Input:`.padEnd(30, ' ') + ext.config.instrumentInputPort)
       ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
       ext.input.addListener("noteon", (note) => {
-        console.debug(note)
         const noteNumber = note.dataBytes[0]
         ext.history.playedNotes.push({
           time: Date.now(),
