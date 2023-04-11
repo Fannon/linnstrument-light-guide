@@ -67,6 +67,7 @@ async function registerCallbacks() {
       console.debug(`LinnStrument MIDI Input:`.padEnd(30, ' ') + ext.config.instrumentInputPort)
       ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
       ext.input.addListener("noteon", (note) => {
+        console.debug(note)
         const noteNumber = note.dataBytes[0]
         ext.history.playedNotes.push({
           time: Date.now(),
@@ -74,7 +75,6 @@ async function registerCallbacks() {
           full: note,
         })
         highlightVisualization(noteNumber, ext.config.playedHighlightColor)
-
       });
       ext.input.addListener("noteoff", (note) => {
         setTimeout(() => {
@@ -137,7 +137,6 @@ async function registerCallbacks() {
 
   // Forward Instrument Input
   if (ext.input) {
-
     if (ext.config.forwardPort1) {
       try {
         ext.forwardPort1 = WebMidi.getOutputByName(ext.config.forwardPort1)
@@ -161,7 +160,6 @@ async function registerCallbacks() {
     log.warn(`No Instrument input found, cannot forward MIDI from it.`)
   }
 
-
 }
 
 //////////////////////////////////////////
@@ -173,8 +171,10 @@ async function registerCallbacks() {
  */
 export function highlightInstrument(noteNumber, color) {
   const noteCoords = ext.gridDict[noteNumber]
-  for (const noteCoord of noteCoords) {
-    highlightInstrumentXY(noteCoord[0], noteCoord[1], color)
+  if (noteCoords) {
+    for (const noteCoord of noteCoords) {
+      highlightInstrumentXY(noteCoord[0], noteCoord[1], color)
+    }
   }
 }
 
@@ -198,29 +198,31 @@ export function highlightInstrumentXY(x, y, color) {
 export function highlightVisualization(noteNumber, color, type = "played", big = false) {
 
   const noteCoords = ext.gridDict[noteNumber]
-  for (const noteCoord of noteCoords) {
-    const x = noteCoord[0]
-    const y = noteCoord[1]
-
-    if (color === 0) {
-      const cell = document.getElementById(`highlight-${type}-${x}-${y}`)
-      if (cell) {
-        cell.parentNode.removeChild(cell);
-      }
-    } else {
-      const cell = document.getElementById(`cell-${x}-${y}`)
-      const size = cell.offsetWidth
+  if (noteCoords) {
+    for (const noteCoord of noteCoords) {
+      const x = noteCoord[0]
+      const y = noteCoord[1]
   
-      const highlightEl = document.createElement('span')
-      highlightEl.id = `highlight-${type}-${x}-${y}`
-      highlightEl.className = `highlight highlight-${type} highlight-${color}`
-      if (big) {
-        highlightEl.style = `height: ${size - 6}px; width: ${size - 6}px; margin-left: ${3}px;`
+      if (color === 0) {
+        const cell = document.getElementById(`highlight-${type}-${x}-${y}`)
+        if (cell) {
+          cell.parentNode.removeChild(cell);
+        }
       } else {
-        highlightEl.style = `height: ${size / 2}px; width: ${size / 2}px; margin-left: ${size / 4}px;`
-      }
+        const cell = document.getElementById(`cell-${x}-${y}`)
+        const size = cell.offsetWidth
     
-      cell.prepend(highlightEl)
+        const highlightEl = document.createElement('span')
+        highlightEl.id = `highlight-${type}-${x}-${y}`
+        highlightEl.className = `highlight highlight-${type} highlight-${color}`
+        if (big) {
+          highlightEl.style = `height: ${size - 6}px; width: ${size - 6}px; margin-left: ${3}px;`
+        } else {
+          highlightEl.style = `height: ${size / 2}px; width: ${size / 2}px; margin-left: ${size / 4}px;`
+        }
+      
+        cell.prepend(highlightEl)
+      }
     }
   }
 }
