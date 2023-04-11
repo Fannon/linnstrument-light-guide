@@ -8,7 +8,7 @@ export const defaultConfig = {
   
   // General Options
   playedHighlightColor: 1,
-  guideHighlightColor: 6,
+  guideHighlightColor: 3,
   linnStrumentSize: 128,
   rowOffset: 5,
   colOffset: 1,

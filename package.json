@@ -1,10 +1,10 @@
 {
-  "name": "linnstrument-synthesia-light-guide",
+  "name": "linnstrument-light-guide",
   "version": "0.1.0",
-  "description": "Synthesia Light Guide support for the LinnStrument",
+  "description": "Light Guide support for the LinnStrument, e.g. for Synthesia.",
   "main": "index.js",
   "scripts": {
-    "deploy": "gh-pages -d ./web && echo https://fannon.github.io/linnstrument-synthesia-light-guide/",
+    "deploy": "gh-pages -d ./web && echo https://fannon.github.io/linnstrument-light-guide/",
     "start": "live-server ./web"
   },
   "author": "Simon Heimler",
