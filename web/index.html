@@ -21,8 +21,8 @@
     <header>
       <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
         <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-          <title><strong>LinnStrument Synthesia Light Guide</strong></title>
-          <span class="fs-4">LinnStrument Synthesia Light Guide</span>
+          <title>LinnStrument Synthesia Light Guide</title>
+          <span id="app-title">LinnStrument Synthesia Light Guide</span>
         </a>
 
         <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
@@ -46,70 +46,80 @@
       </div> -->
       <div class="row text-left">
         <div class="col-5">
-          <h3>General Configuration</h3>
-          <form>
-            <div class="mb-3">
-              <label for="startNoteNumber" class="form-label">Start MIDI Note Number</label>
-              <input id="startNoteNumber" class="form-control" type="text" placeholder="30">
 
-              <label for="rowOffset" class="form-label">Row Offset</label>
-              <input id="rowOffset" class="form-control" type="text" placeholder="5">
+          <div class="card text-dark bg-light mb-3">
+            <div class="card-header">General Configuration</div>
+            <div class="card-body">
+              <form>
+                <label for="startNoteNumber" class="form-label">Start MIDI Note Number</label>
+                <input id="startNoteNumber" class="form-control" type="text" placeholder="30">
 
-              <label for="highlightColor" class="form-label">Highlight Color</label>
-              <select id="highlightColor" class="form-select">
-                <option value="0" selected>As set in Note Lights settings</option>
-                <option value="1">Red</option>
-                <option value="2">Yellow</option>
-                <option value="3">Green</option>
-                <option value="4">Cyan</option>
-                <option value="5">Blue</option>
-                <option value="6">Magenta</option>
-                <option value="7">Off</option>
-                <option value="8">White</option>
-                <option value="9">Orange</option>
-                <option value="10">Lime</option>
-                <option value="11">Pink</option>
-              </select>
+                <label for="rowOffset" class="form-label">Row Offset</label>
+                <input id="rowOffset" class="form-control" type="text" placeholder="5">
 
-              <label for="linnStrumentSize" class="form-label">LinnStrument Size</label>
-              <select id="linnStrumentSize" class="form-select">
-                <option selected>128</option>
-                <option>200</option>
-              </select>
+                <label for="highlightColor" class="form-label">Highlight Color</label>
+                <select id="highlightColor" class="form-select">
+                  <option value="0" selected>As set in Note Lights settings</option>
+                  <option value="1">Red</option>
+                  <option value="2">Yellow</option>
+                  <option value="3">Green</option>
+                  <option value="4">Cyan</option>
+                  <option value="5">Blue</option>
+                  <option value="6">Magenta</option>
+                  <option value="7">Off</option>
+                  <option value="8">White</option>
+                  <option value="9">Orange</option>
+                  <option value="10">Lime</option>
+                  <option value="11">Pink</option>
+                </select>
 
+                <label for="linnStrumentSize" class="form-label">LinnStrument Size</label>
+                <select id="linnStrumentSize" class="form-select">
+                  <option selected>128</option>
+                  <option>200</option>
+                </select>
+
+              </form>
             </div>
-          </form>
-          <h3>MIDI Port Configuration</h3>
-          <form>
-            <div class="mb-3">
-              <label for="instrumentInputPort" class="form-label"><strong>Input</strong>: LinnStrument</label>
-              <select id="instrumentInputPort" class="form-select"></select>
-              <!-- <div class="form-text">Select LinnStrument input MIDI port</div> -->
+          </div>
 
-              <label for="lightGuideInputPort" class="form-label"><strong>Input</strong>: Synthesia Light Guide</label>
-              <select id="lightGuideInputPort" class="form-select"></select>
-              <div class="form-text">MIDI port where Synthesia sends Light MIDI data (Finger based Channel)</div>
+          <div class="card text-dark bg-light mb-3">
+            <div class="card-header">MIDI Port Configuration</div>
+            <div class="card-body">
+              <form>
+                <label for="instrumentInputPort" class="form-label"><strong>Input</strong>: LinnStrument</label>
+                <select id="instrumentInputPort" class="form-select"></select>
+                <!-- <div class="form-text">Select LinnStrument input MIDI port</div> -->
 
-              <label for="instrumentOutputPort" class="form-label"><strong>Output</strong>: LinnStrument</label>
-              <select id="instrumentOutputPort" class="form-select"></select>
-              <!-- <div class="form-text">Select LinnStrument output MIDI port</div> -->
+                <label for="lightGuideInputPort" class="form-label"><strong>Input</strong>: Synthesia Light
+                  Guide</label>
+                <select id="lightGuideInputPort" class="form-select"></select>
+                <div class="form-text">MIDI port where Synthesia sends Light MIDI data (Finger based Channel)</div>
 
-              <label for="forwardPort1" class="form-label"><strong>Forward</strong>: MIDI Thru 1</label>
-              <select id="forwardPort1" class="form-select"></select>
-              <!-- <div class="form-text">Forwards LinnStrument MIDI to this port.</div> -->
+                <label for="instrumentOutputPort" class="form-label"><strong>Output</strong>: LinnStrument</label>
+                <select id="instrumentOutputPort" class="form-select"></select>
+                <!-- <div class="form-text">Select LinnStrument output MIDI port</div> -->
 
-              <label for="forwardPort2" class="form-label"><strong>Forward</strong>: MIDI Thru 2 (optional)</label>
-              <select id="forwardPort2" class="form-select"></select>
-              <!-- <div class="form-text">Forwards LinnStrument MIDI to this port (optional).</div> -->
+                <label for="forwardPort1" class="form-label"><strong>Forward</strong>: MIDI Thru 1</label>
+                <select id="forwardPort1" class="form-select"></select>
+                <!-- <div class="form-text">Forwards LinnStrument MIDI to this port.</div> -->
 
+                <label for="forwardPort2" class="form-label"><strong>Forward</strong>: MIDI Thru 2 (optional)</label>
+                <select id="forwardPort2" class="form-select"></select>
+                <!-- <div class="form-text">Forwards LinnStrument MIDI to this port (optional).</div> -->
+              </form>
             </div>
-          </form>
+          </div>
+
           <button type="button" id="save" class="btn btn-success">Save</button>
           <button type="button" id="reset" class="btn btn-danger">Reset</button>
         </div>
         <div class="col-7">
-          <h3>Logs</h3>
-          <div id="log"></div>
+          <div class="card text-dark bg-light mb-3">
+            <div class="card-header">Logs</div>
+            <div class="card-body" id="log" >
+            </div>
+          </div>
         </div>
       </div>
     </main>
