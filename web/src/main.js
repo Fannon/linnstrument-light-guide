@@ -67,7 +67,6 @@ async function registerCallbacks() {
       console.debug(`LinnStrument MIDI Input:`.padEnd(30, ' ') + ext.config.instrumentInputPort)
       ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
       ext.input.addListener("noteon", (note) => {
-        console.debug(note)
         const noteNumber = note.dataBytes[0]
         ext.history.playedNotes.push({
           time: Date.now(),
@@ -170,6 +169,7 @@ async function registerCallbacks() {
  * Highlight pads on instrument by note number and color
  */
 export function highlightInstrument(noteNumber, color) {
+  console.debug(`highlightInstrument`, noteNumber, color)
   const noteCoords = ext.gridDict[noteNumber]
   if (noteCoords) {
     for (const noteCoord of noteCoords) {
