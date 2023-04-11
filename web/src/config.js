@@ -11,6 +11,9 @@ export const defaultConfig = {
   linnStrumentSize: 128,
   rowOffset: 5,
   startNoteNumber: 30,
+
+  // Advanced Options (no UI yet)
+  fadeOutDelay: 200, // in ms
 }
 
 export function initConfig() {

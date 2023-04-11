@@ -1,5 +1,6 @@
 import { log } from "./log.js";
 import { initConfig, resetConfig, saveConfig } from "./config.js";
+import { resetGrid, getGridDict, generateGrid, drawGrid } from "./grid.js";
 
 /**
  * Global namespace
@@ -36,6 +37,8 @@ async function init() {
   resetGrid()
 
   ext.grid = generateGrid(ext.config.rowOffset, ext.config.startNoteNumber)
+  ext.gridDict = getGridDict(ext.grid, ext.config.startNoteNumber)
+  drawGrid(ext.grid)
 
   await registerCallbacks()
 
@@ -53,29 +56,71 @@ async function registerCallbacks() {
     resetConfig(event)
   });
 
+  // Instrument Input
+  try {
+    
+    ext.input.addListener("noteon", (note) => {
+      const noteNumber = note.dataBytes[0]
+      ext.history.playedNotes.push({
+        time: Date.now(),
+        note: noteNumber,
+        full: note,
+      })
+      console.log('Played ON', note)
+
+      const noteCoords = ext.gridDict[noteNumber]
+      for (const noteCoord of noteCoords) {
+        highlightVisualization(noteCoord[0], noteCoord[1], 1)
+      }
+    });
+    ext.input.addListener("noteoff", (note) => {
+      const noteNumber = note.dataBytes[0]
+      const noteCoords = ext.gridDict[noteNumber]
+
+      setTimeout(() => {
+        for (const noteCoord of noteCoords) {
+          highlightVisualization(noteCoord[0], noteCoord[1], 0)
+        }
+      }, ext.config.fadeOutDelay);
+    });
+
+
+  } catch (err) {
+    log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
+    log.error(err.toString())
+    console.error(err)
+  }
+
   // Light Guide Input
   try {
-    ext.lightGuideInput.addListener("noteon", (msg) => {
-      const note = msg.dataBytes[0]
+
+    ext.lightGuideInput.addListener("noteon", (note) => {
+      const noteNumber = note.dataBytes[0]
       ext.history.guideNotes.push({
         time: Date.now(),
-        note: note,
-        full: msg,
+        note: noteNumber,
+        full: note,
       })
-      let logMsg = `Guide Note: ${note.toString().padStart(3, '0')} | Highlighted on:`
-      const noteCoords = ext.grid[note]
+      let logMsg = `Guide Note: ${noteNumber.toString().padStart(3, '0')} | Highlighted on:`
+      const noteCoords = ext.gridDict[noteNumber]
       for (const noteCoord of noteCoords) {
-        highlightNote(noteCoord[0], noteCoord[1], ext.config.highlightColor)
+        highlightInstrument(noteCoord[0], noteCoord[1], ext.config.highlightColor)
+        highlightVisualization(noteCoord[0], noteCoord[1], ext.config.highlightColor, 'guide', true)
         logMsg += ` [${noteCoord[0].toString().padStart(2, '0')}, ${noteCoord[1].toString().padStart(2, '0')}]`
       }
       log.info(logMsg)
     });
-    ext.lightGuideInput.addListener("noteoff", (msg) => {
-      const note = msg.dataBytes[0]
-      const noteCoords = ext.grid[note]
-      for (const noteCoord of noteCoords) {
-        highlightNote(noteCoord[0], noteCoord[1], 0)
-      }
+
+    ext.lightGuideInput.addListener("noteoff", (note) => {
+      const noteNumber = note.dataBytes[0]
+      const noteCoords = ext.gridDict[noteNumber]
+      setTimeout(() => {
+        for (const noteCoord of noteCoords) {
+          highlightInstrument(noteCoord[0], noteCoord[1], 0)
+          highlightVisualization(noteCoord[0], noteCoord[1], 0, 'guide')
+        }
+      }, ext.config.fadeOutDelay);
+      
     });
   } catch (err) {
     log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
@@ -105,67 +150,37 @@ async function registerCallbacks() {
 // HELPER FUNCTIONS                     //
 //////////////////////////////////////////
 
-function highlightNote(x, y, color) {
+export function highlightInstrument(x, y, color) {
   // console.debug(`Highlighting`, x.toString().padStart(2, '0'), y.toString().padStart(2, '0'), color)
   const channel = ext.output.channels[1]
-  channel.sendControlChange(20, x);
+  channel.sendControlChange(20, x + 1); // Add one because 0 is settings
   channel.sendControlChange(21, y);
   channel.sendControlChange(22, color);
+
 }
 
-/**
- * Calculate the grid for the LinnStrument
- * where each MIDI note can be found by x and y coordinates
- * 
- * @param rowOffset How many half tone steps the layout has
- * @param startNoteNumber Which midi note the grid starts with (bottom left corner)
- * @returns 
- */
-function generateGrid(rowOffset = 5, startNoteNumber = 30) {
+export function highlightVisualization(x, y, color, type = "played", big = false) {
 
-  const columns = ext.config.linnStrumentSize / 8
-
-  // First generate the grid with the note numbers as it is on the LinnStrument
-  const grid = []
-
-  for (let x = 0; x <= columns; x++) {
-    grid[x] = []
-    for (let y = 0; y <= 7; y++) {
-      grid[x][y] = startNoteNumber + x + (y * rowOffset)
+  if (color === 0) {
+    const cell = document.getElementById(`highlight-${type}-${x}-${y}`)
+    if (cell) {
+      cell.parentNode.removeChild(cell);
     }
+  } else {
+    const cell = document.getElementById(`cell-${x}-${y}`)
+    const size = cell.offsetWidth
+
+    const highlightEl = document.createElement('span')
+    highlightEl.id = `highlight-${type}-${x}-${y}`
+    highlightEl.className = `highlight highlight-${type} highlight-${color}`
+    if (big) {
+      highlightEl.style = `height: ${size - 6}px; width: ${size - 6}px; margin-left: ${3}px;`
+
+    } else {
+      highlightEl.style = `height: ${size / 2}px; width: ${size / 2}px; margin-left: ${size / 4}px;`
+    }
+  
+    cell.appendChild(highlightEl)
   }
 
-  // Now create a dictionary that lists me all grid coordinates for a given note
-  // This is used to speed up the access to find the coordinates
-  const gridDict = {}
-
-  for (let note = startNoteNumber; note <= 127; note++) {
-    gridDict[note] = []
-    for (let x = 0; x <= columns; x++) {
-      for (let y = 0; y <= 7; y++) {
-        if (grid[x][y] === note) {
-          gridDict[note].push([x + 1, y])
-        }
-      }
-    }
-  }
-
-  console.debug(`Generated Grid with start note="${startNoteNumber}" and row offset=${rowOffset}`, grid)
-
-  return gridDict;
 }
-
-/**
- * Helper function that resets all color highlights from the grid
- * by brute force
- */
-function resetGrid() {
-  const columns = ext.config.linnStrumentSize / 8
-  for (let x = 0; x <= columns; x++) {
-    for (let y = 0; y <= 7; y++) {
-      highlightNote(x, y, 0)
-    }
-  }
-}
-
-
