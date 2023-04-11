@@ -7,7 +7,8 @@ export const defaultConfig = {
   forwardPort2: 'Loop Forward B', // Optional
   
   // General Options
-  highlightColor: 6,
+  playedHighlightColor: 1,
+  guideHighlightColor: 6,
   linnStrumentSize: 128,
   rowOffset: 5,
   colOffset: 1,
@@ -35,7 +36,8 @@ export function initConfig() {
   document.getElementById('startNoteNumber').value = config.startNoteNumber.toString()
   document.getElementById('rowOffset').value = config.rowOffset.toString()
   document.getElementById('colOffset').value = config.colOffset.toString()
-  document.getElementById('highlightColor').value = config.highlightColor.toString()
+  document.getElementById('guideHighlightColor').value = config.guideHighlightColor.toString()
+  document.getElementById('playedHighlightColor').value = config.playedHighlightColor.toString()
   document.getElementById('linnStrumentSize').value = config.linnStrumentSize.toString()
 
   // instrumentInputPort
@@ -98,7 +100,8 @@ export function saveConfig(config, event) {
   config.startNoteNumber = parseInt(document.getElementById("startNoteNumber").value);
   config.rowOffset = parseInt(document.getElementById("rowOffset").value);
   config.colOffset = parseInt(document.getElementById("colOffset").value);
-  config.highlightColor = parseInt(document.getElementById("highlightColor").value);
+  config.guideHighlightColor = parseInt(document.getElementById("guideHighlightColor").value);
+  config.playedHighlightColor = parseInt(document.getElementById("playedHighlightColor").value);
   config.linnStrumentSize = parseInt(document.getElementById("linnStrumentSize").value);
 
   config.instrumentInputPort = document.getElementById("instrumentInputPort").value;

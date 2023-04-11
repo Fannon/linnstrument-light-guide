@@ -73,13 +73,13 @@ export function drawGrid(grid) {
   v.innerHTML = ''
   const cols = grid[0].length
   const rows = grid.length
-  const padSize = Math.floor(v.offsetWidth / rows) - 7;
+  const padSize = Math.floor(v.offsetWidth / rows) - 4;
 
   for (let y = cols - 1; y >= 0; y--) { // draw inverse
 
     const columnEl = document.createElement('div')
     columnEl.className = 'column'
-    columnEl.style = `height: ${padSize + 6}px;`
+    columnEl.style = `height: ${padSize + 4}px;`
     v.appendChild(columnEl)
 
     for (let x = 0; x < rows; x++) {

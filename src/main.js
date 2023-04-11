@@ -73,7 +73,7 @@ async function registerCallbacks() {
           note: noteNumber,
           full: note,
         })
-        highlightVisualization(noteNumber, 1)
+        highlightVisualization(noteNumber, ext.config.playedHighlightColor)
 
       });
       ext.input.addListener("noteoff", (note) => {
@@ -115,8 +115,8 @@ async function registerCallbacks() {
           note: noteNumber,
           full: note,
         })
-        highlightInstrument(noteNumber, ext.config.highlightColor)
-        highlightVisualization(noteNumber, ext.config.highlightColor, 'guide', true)
+        highlightInstrument(noteNumber, ext.config.guideHighlightColor)
+        highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
       });
   
       ext.lightGuideInput.addListener("noteoff", (note) => {
