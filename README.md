@@ -1,20 +1,18 @@
-# LinnStrument Synthesia Light Guide Support
+# LinnStrument Light Guide Support
 
 ## Description
 
-[Synthesia](https://synthesiagame.com/) offers a "Light Guide" feature for some keyboards.
-LinnStrument is not directly supported, but with this script it's still possible to have it.
+Some keyboard learning tools like [Synthesia](https://synthesiagame.com/) offer a "Light Guide" feature for certain keyboards.
+LinnStrument is not directly supported by Synthesia, but this app adds indirect support.
 
-In principle this tool could work with any program that sends Light Guide MIDI information. 
-The script assumes that the Light Guide MIDI input port sends note-on and note-off messages. 
+In principle this app could work with any program that sends Light Guide MIDI information, assuming that the Light Guide MIDI input port sends note-on and note-off messages. 
 
 ![Synthesia Light Guide](./assets/linnstrument-synthesia-light-guide.jpg)
 
-### How to use
+## User Guide
 
-Setting this up is a big fiddly. 
-This is also in part due to how there are many MIDI ports and loops needed to route MIDI information from and to the right places.
-Personally, I'm using a DAW to hear my own notes, the synthesia notes and drums / metronome with low latency.
+Setting this up with Synthesia is a big fiddly, as it needs a few MIDI loop devices to route MIDI information from and to the right places.
+Personally, I'm also using a DAW to hear my own notes, synthesia notes and drums / metronome with low latency.
 
 * You need to have a virtual MIDI Loop Device (e.g. loopMIDI) where Synthesia sends KeyLights to the Output.
   * On Windows you can use a tool like [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html)
@@ -54,8 +52,15 @@ Make sure that the configuration is correct and matches your MIDI input and outp
 
 Have fun :)
 
-### TODO
+## TODO and Ideas
 
+* It would be nice to detect mistakes / timing problems and create statistics - based on a comparison of guide notes and actually played notes.
 * Find out starting note and row offset automatically or ask the player to play two/three notes to detect it?
 * Does not support / detect transpose on the fly. 
 
+## Developer Guide
+
+* Install Node.js if not there
+* Check out this repository
+* Run `npm install`
+* Run `npm start` 
