@@ -29,9 +29,14 @@ export function initConfig() {
     }
   }
 
-  //////////////////////////////////////////
-  // WRITE SETTINGS INTO FORM             //
-  //////////////////////////////////////////
+  updateSettingsInUI(config)
+
+  console.debug('Config', config)
+
+  return config
+}
+
+export function updateSettingsInUI(config) {
 
   document.getElementById('startNoteNumber').value = config.startNoteNumber.toString()
   document.getElementById('rowOffset').value = config.rowOffset.toString()
@@ -86,10 +91,6 @@ export function initConfig() {
     } 
     document.getElementById('forwardPort2').add(option)
   });
-
-  console.debug('Config', config)
-
-  return config
 }
 
 export function saveConfig(config, event) {

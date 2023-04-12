@@ -59,8 +59,6 @@ Have fun :)
 ## TODO and Ideas
 
 * It would be nice to detect mistakes / timing problems and create statistics - based on a comparison of guide notes and actually played notes.
-* Find out starting note and row offset automatically or ask the player to play two/three notes to detect it?
-* Does not support / detect transpose on the fly. 
 
 ## Developer Guide
 

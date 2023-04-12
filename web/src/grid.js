@@ -77,11 +77,15 @@ export function drawGrid(grid) {
     v.appendChild(columnEl)
 
     for (let x = 0; x < rows; x++) {
+      let noteName = '╳'
+      let noteClass = 'invalid'
 
       const noteNumber = grid[x][y]
-      const note = new Note(noteNumber)
-      const noteName = note.identifier
-      const noteClass = `${note.name}${note.accidental ? '-sharp' : ''}`
+      if (noteNumber >= 0 && noteNumber < 128) {
+        const note = new Note(noteNumber)
+        noteName = note.identifier
+        noteClass = `${note.name}${note.accidental ? '-sharp' : ''}`
+      }
 
       const cellEl = document.createElement('span')
       cellEl.id = `cell-${x}-${y}`
