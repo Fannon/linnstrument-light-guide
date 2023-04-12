@@ -18,6 +18,11 @@ export const defaultConfig = {
   /** How long a played note / guide note stays after note off (in ms) */
   fadeOutDelay: 200,
   updateLayoutInterval: 200, // in ms
+
+  guideNoteStatistics: true,
+  inTimeInterval: 100,
+  outOfTimeInterval: 1000,
+  guideNoteStaticsFadeOut: 1500,
 }
 
 export function initConfig() {

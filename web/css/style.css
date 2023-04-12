@@ -37,7 +37,7 @@
 
 #visualization .cell {
   background: #f2f2f2;
-  /* border: 2px solid #ebebeb; */
+  border-radius: 3px;
   color: #000;
   font-size: 0.8em;
   margin-left: 4px;
@@ -100,6 +100,19 @@
 }
 #visualization .highlight-11 {
   background-color: rgba(255, 0, 162, 0.35);
+}
+
+#visualization .played-out-of-time {
+  border: 3px solid #b61a1a;
+}
+#visualization .played-in-time {
+  border: 3px solid #1ab637;
+}
+#visualization .played-early {
+  border: 3px solid #0dcaf0;
+}
+#visualization .played-late {
+  border: 3px solid #0d6efd;
 }
 
 

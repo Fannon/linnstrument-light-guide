@@ -17,7 +17,6 @@ export const log = {
     console.error(msg)
     logEntry.classList = 'log-entry log-error'
     logEntry.innerHTML = `<small class="text-muted">${getTime()}</small> <span class="msg">${msg}</span>`;
-    logEntry.appendChild(textNode);
     document.getElementById("log").prepend(logEntry);
   }
 }
