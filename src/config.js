@@ -13,15 +13,22 @@ export const defaultConfig = {
   rowOffset: 5,
   colOffset: 1,
   startNoteNumber: 30,
+  /** If the time offset is lower than this, the note is considered "in-time" (in ms) */
+  inTimeThreshold: 100,
+  /** 
+   * If the time offset is higher than this, the note is considered a missed note. (in ms)
+   * After this time, the app will stop looking and consider it a missed note. 
+   */
+  missedNoteThreshold: 500,
 
   // Advanced Options (no UI yet)
   /** How long a played note / guide note stays after note off (in ms) */
   fadeOutDelay: 200,
   updateLayoutInterval: 200, // in ms
 
+
   guideNoteStatistics: true,
-  inTimeInterval: 100,
-  outOfTimeInterval: 1000,
+
   guideNoteStaticsFadeOut: 1500,
 }
 

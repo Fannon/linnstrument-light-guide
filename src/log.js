@@ -1,6 +1,5 @@
 export const log = {
   info: (msg) => {
-    console.info(msg)
     const logEntry = document.createElement("div");
     logEntry.classList = 'log-entry log-info'
     logEntry.innerHTML = `<small class="text-muted">${getTime()}</small> <span class="msg">${msg}</span>`;
