@@ -154,7 +154,7 @@ async function registerMidiEvents() {
       ext.lightGuideInput.addListener("keyaftertouch", async (msg) => {
         console.debug(msg);
         if (msg.value > 0) {
-          const noteNumber = msg.dataBytes[0]
+          const noteNumber = msg.dataBytes[0] + 21
           highlightInstrument(noteNumber, ext.config.guideHighlightColor)
           highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
           if (ext.config.guideNoteStatistics) {
@@ -162,7 +162,7 @@ async function registerMidiEvents() {
             logGuideNoteTiming(timing)
           }
         } else {
-          const noteNumber = msg.dataBytes[0]
+          const noteNumber = msg.dataBytes[0] + 21
           setTimeout(() => {
             highlightInstrument(noteNumber, 0)
             highlightVisualization(noteNumber, 0, 'guide')
