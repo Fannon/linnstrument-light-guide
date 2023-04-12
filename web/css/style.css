@@ -7,6 +7,12 @@
   height: 800px;
   overflow-y: scroll;
 }
+.card-header button {
+  float: right;
+  margin-left: 8px;
+  padding: 0 8px;
+  height: 24px;
+}
 
 .log-entry {
   background: #f0f1f2;

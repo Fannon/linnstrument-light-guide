@@ -70,6 +70,14 @@ async function registerUiEvents() {
   document.getElementById("reset").addEventListener("click", (event) => {
     resetConfig(event)
   });
+  document.getElementById("clear-log").addEventListener("click", () => {
+    document.getElementById("log").innerHTML = ''
+    ext.history.playedNotes = []
+    ext.stats.guideNoteTimings = []
+  });
+  document.getElementById("calculate-statistics").addEventListener("click", () => {
+    calculateStatistics()
+  });
 
   // UI Resize trigger
   window.addEventListener("resize", debounce(() => {
@@ -424,6 +432,47 @@ function logGuideNoteTiming(entry) {
   }
 
   return entry
+}
+
+function calculateStatistics() {
+  const stats = {
+    notesPlayed: ext.history.playedNotes.length,
+    guideNotes: ext.stats.guideNoteTimings.length,
+    playedInTime: 0,
+    playedEarly: 0,
+    playedLate: 0,
+    playedOutOfTime: 0,
+    avgTimingOffset: 0
+  }
+  let cumulatedTimingOffset = 0
+  let timingOffsetCounter = 0
+  for (const entry of ext.stats.guideNoteTimings) {
+    if (Math.abs(entry.timingOffset) > ext.config.outOfTimeInterval) {
+      stats.playedOutOfTime += 1
+    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeInterval) {
+      stats.playedInTime += 1
+      timingOffsetCounter += 1
+      cumulatedTimingOffset += Math.abs(entry.timingOffset)
+    } else if (entry.timingOffset < 0) {
+      stats.playedEarly += 1
+      timingOffsetCounter += 1
+      cumulatedTimingOffset += Math.abs(entry.timingOffset)
+    } else {
+      stats.playedLate += 1
+      timingOffsetCounter += 1
+      cumulatedTimingOffset += Math.abs(entry.timingOffset)
+    }
+  }
+
+  stats.avgTimingOffset = Math.round(cumulatedTimingOffset / (timingOffsetCounter || 1))
+  stats.playedInTimeRatio = Math.round((stats.playedInTime / (stats.notesPlayed || 1)) * 100) / 100
+
+  console.log(stats)
+  let logMessage = 'Statistics: <br/>'
+  for (let name in stats) {
+    logMessage += `${name}: ${stats[name]}<br/>`
+  }
+  log.info(logMessage)
 }
 
 /**
