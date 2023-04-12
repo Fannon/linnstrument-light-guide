@@ -43,7 +43,7 @@ async function init() {
   await updateLayoutFromLinnStrument()
   setInterval(async () => {
     await updateLayoutFromLinnStrument()
-  }, 200);
+  }, ext.config.updateLayoutInterval);
 }
 
 async function setupGrid() {

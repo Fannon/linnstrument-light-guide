@@ -15,7 +15,9 @@ export const defaultConfig = {
   startNoteNumber: 30,
 
   // Advanced Options (no UI yet)
-  fadeOutDelay: 200, // in ms
+  /** How long a played note / guide note stays after note off (in ms) */
+  fadeOutDelay: 200,
+  updateLayoutInterval: 200, // in ms
 }
 
 export function initConfig() {
