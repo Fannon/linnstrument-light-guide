@@ -22,14 +22,13 @@ export const defaultConfig = {
   missedNoteThreshold: 500,
 
   // Advanced Options (no UI yet)
+  guideNoteStatistics: true,
+  /** How long the guide note feedback stays visible (colorized border around the cell) (in ms) */
+  guideNoteStaticsFadeOut: 1500,
   /** How long a played note / guide note stays after note off (in ms) */
   fadeOutDelay: 200,
   updateLayoutInterval: 200, // in ms
 
-
-  guideNoteStatistics: true,
-
-  guideNoteStaticsFadeOut: 1500,
 }
 
 export function initConfig() {
@@ -58,8 +57,8 @@ export function updateSettingsInUI(config) {
   document.getElementById('guideHighlightColor').value = config.guideHighlightColor.toString()
   document.getElementById('playedHighlightColor').value = config.playedHighlightColor.toString()
   document.getElementById('linnStrumentSize').value = config.linnStrumentSize.toString()
-  document.getElementById('inTimeInterval').value = config.inTimeInterval.toString()
-  document.getElementById('outOfTimeInterval').value = config.outOfTimeInterval.toString()
+  document.getElementById('inTimeThreshold').value = config.inTimeThreshold.toString()
+  document.getElementById('missedNoteThreshold').value = config.missedNoteThreshold.toString()
 
   // instrumentInputPort
   WebMidi.inputs.forEach((device) => {
@@ -120,8 +119,8 @@ export function saveConfig(config, event) {
   config.guideHighlightColor = parseInt(document.getElementById("guideHighlightColor").value);
   config.playedHighlightColor = parseInt(document.getElementById("playedHighlightColor").value);
   config.linnStrumentSize = parseInt(document.getElementById("linnStrumentSize").value);
-  config.inTimeInterval = parseInt(document.getElementById("inTimeInterval").value);
-  config.outOfTimeInterval = parseInt(document.getElementById("outOfTimeInterval").value);
+  config.inTimeThreshold = parseInt(document.getElementById("inTimeThreshold").value);
+  config.missedNoteThreshold = parseInt(document.getElementById("missedNoteThreshold").value);
 
   config.instrumentInputPort = document.getElementById("instrumentInputPort").value;
   config.instrumentOutputPort = document.getElementById("instrumentOutputPort").value;

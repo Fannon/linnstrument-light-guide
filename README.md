@@ -2,6 +2,8 @@
 
 ## Description
 
+> This is available as a [web app](https://fannon.github.io/linnstrument-light-guide/). You can use in any modern browser.
+
 Some keyboard learning tools like [Synthesia](https://synthesiagame.com/) offer a "Light Guide" feature for certain keyboards.
 LinnStrument is not directly supported by Synthesia, but this app adds indirect support.
 
@@ -43,7 +45,7 @@ Personally, I'm also using a DAW to hear my own notes, synthesia notes and drums
 ![Synthesia Input Config](./assets/synthesia-input.png)
 
 * Configure Synthesia Music Output:
-  * Send "Key Lights" to `Loop Back C`, using "Finger-based channel" mode.
+  * Send "Key Lights" to `Loop Back C`, using "ONE Smart Piano" or the "Finger-based channel" mode.
   * Optional: Send "Background" to `Loop Back A`.
   * Optional: Send "Percussion, Metronome" to `Loop Back B`.
 

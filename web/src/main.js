@@ -152,6 +152,7 @@ async function registerMidiEvents() {
 
       // Support Synthesia Proprietary 1 (ONE Smart Piano) Light Guide input
       ext.lightGuideInput.addListener("keyaftertouch", async (msg) => {
+        console.debug(msg);
         if (msg.value > 0) {
           const noteNumber = msg.dataBytes[0]
           highlightInstrument(noteNumber, ext.config.guideHighlightColor)
@@ -161,7 +162,7 @@ async function registerMidiEvents() {
             logGuideNoteTiming(timing)
           }
         } else {
-          const noteNumber = msg.note.number
+          const noteNumber = msg.dataBytes[0]
           setTimeout(() => {
             highlightInstrument(noteNumber, 0)
             highlightVisualization(noteNumber, 0, 'guide')
@@ -394,6 +395,9 @@ async function measureNoteTiming(msg) {
   });
 }
 
+/**
+ * Logs and visualizes the Light Guide Note timing statistics
+ */
 function logGuideNoteTiming(entry) {
   ext.stats.guideNoteTimings.push(entry)
 
