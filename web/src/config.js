@@ -51,6 +51,8 @@ export function updateSettingsInUI(config) {
   document.getElementById('guideHighlightColor').value = config.guideHighlightColor.toString()
   document.getElementById('playedHighlightColor').value = config.playedHighlightColor.toString()
   document.getElementById('linnStrumentSize').value = config.linnStrumentSize.toString()
+  document.getElementById('inTimeInterval').value = config.inTimeInterval.toString()
+  document.getElementById('outOfTimeInterval').value = config.outOfTimeInterval.toString()
 
   // instrumentInputPort
   WebMidi.inputs.forEach((device) => {
@@ -111,6 +113,8 @@ export function saveConfig(config, event) {
   config.guideHighlightColor = parseInt(document.getElementById("guideHighlightColor").value);
   config.playedHighlightColor = parseInt(document.getElementById("playedHighlightColor").value);
   config.linnStrumentSize = parseInt(document.getElementById("linnStrumentSize").value);
+  config.inTimeInterval = parseInt(document.getElementById("inTimeInterval").value);
+  config.outOfTimeInterval = parseInt(document.getElementById("outOfTimeInterval").value);
 
   config.instrumentInputPort = document.getElementById("instrumentInputPort").value;
   config.instrumentOutputPort = document.getElementById("instrumentOutputPort").value;

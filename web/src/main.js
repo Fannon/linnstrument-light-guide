@@ -147,6 +147,7 @@ async function registerMidiEvents() {
       log.info(`Connecting Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
       ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
       ext.lightGuideInput.addListener("noteon", async (note) => {
+        console.warn('LIght Guide Input', note)
         const noteNumber = note.dataBytes[0]
         highlightInstrument(noteNumber, ext.config.guideHighlightColor)
         highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
