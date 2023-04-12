@@ -1,5 +1,5 @@
 import { log } from "./log.js";
-import { initConfig, resetConfig, saveConfig } from "./config.js";
+import { initConfig, resetConfig, saveConfig, updateSettingsInUI } from "./config.js";
 import { resetGrid, getGridDict, generateGrid, drawGrid } from "./grid.js";
 
 /**
@@ -11,6 +11,7 @@ const ext = {
     playedNotes: [],
     guideNotes: [],
   },
+
   stats: {},
 }
 window.ext = ext
@@ -28,43 +29,66 @@ async function init() {
   ext.config = initConfig()
   
   // Setup MIDI callbacks / event listeners
-  await registerCallbacks()
+  await registerUiEvents()
+  await registerMidiEvents()
 
   // Setup Grid
+  setupGrid()
+
+  // Put LinnStrument out of User Firmware Mode (if it still is)
+  ext.output.sendNrpnValue(nrpn(245), nrpn(0), { channels: 1 });
+
+  log.info(`Successfully initialized.`)
+
+  await updateLayoutFromLinnStrument()
+  setInterval(async () => {
+    await updateLayoutFromLinnStrument()
+  }, 200);
+}
+
+async function setupGrid() {
   resetGrid()
   ext.grid = generateGrid(ext.config.startNoteNumber, ext.config.rowOffset, ext.config.colOffset)
   ext.gridDict = getGridDict(ext.grid, ext.config.startNoteNumber)
   drawGrid(ext.grid)
-
-  log.info(`Successfully initialized.`)
 }
 
-
-async function registerCallbacks() {
-  // UI Buttons Listeners
-  document.getElementById("save").addEventListener("click", (event) => {
-    saveConfig(ext.config, event)
-  });
-  const inputElements = document.getElementsByTagName("input")
-  for (const el of inputElements) {
-    el.addEventListener("focusout", (event) => {
-      console.log('save config')
+/**
+ * Register UI Events and Listeners
+ */
+async function registerUiEvents() {
+    // UI Buttons Listeners
+    document.getElementById("save").addEventListener("click", (event) => {
       saveConfig(ext.config, event)
     });
-  }
-  document.getElementById("reset").addEventListener("click", (event) => {
-    resetConfig(event)
-  });
+    const inputElements = document.getElementsByTagName("input")
+    for (const el of inputElements) {
+      el.addEventListener("focusout", (event) => {
+        saveConfig(ext.config, event)
+      });
+    }
+    document.getElementById("reset").addEventListener("click", (event) => {
+      resetConfig(event)
+    });
+  
+    // UI Resize trigger
+    window.addEventListener("resize", debounce(() => {
+      drawGrid(ext.grid)
+    }, 200 ));
+}
 
-  // UI Resize trigger
-  window.addEventListener("resize", debounce(() => {
-    drawGrid(ext.grid)
-  }, 200 ));
+/**
+ * Register listeners and callbacks to MIDI events / messages
+ */
+async function registerMidiEvents() {
 
-  // Instrument Input
+  //////////////////////////////////////////
+  // INSTRUMENT INPUT                     //
+  //////////////////////////////////////////
+
   if (ext.config.instrumentInputPort) {
     try {
-      console.debug(`LinnStrument MIDI Input:`.padEnd(30, ' ') + ext.config.instrumentInputPort)
+      log.info(`Connecting LinnStrument MIDI Input: ${ext.config.instrumentInputPort}`)
       ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
       ext.input.addListener("noteon", (note) => {
         const noteNumber = note.dataBytes[0]
@@ -80,8 +104,9 @@ async function registerCallbacks() {
           highlightVisualization(note.dataBytes[0], 0)
         }, ext.config.fadeOutDelay);
       });
-
-
+      // ext.input.channels[1].addListener("nrpn", (msg) => {
+      //   console.debug(`MIDI Input NRPN`, msg.message.data, msg)
+      // })
     } catch (err) {
       log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       log.error(err.toString())
@@ -91,9 +116,13 @@ async function registerCallbacks() {
     log.error(`No Instrument Input Port given.`)
   }
 
+  //////////////////////////////////////////
+  // INSTRUMENT OUTPUT                    //
+  //////////////////////////////////////////
+
   if (ext.config.instrumentOutputPort) {
     try {
-      console.debug(`LinnStrument MIDI Output:`.padEnd(30, ' ') + ext.config.instrumentOutputPort)
+      log.info(`Connecting LinnStrument MIDI Output: ${ext.config.instrumentOutputPort}`)
       ext.output = WebMidi.getOutputByName(ext.config.instrumentOutputPort)
     } catch (err) {
       log.error(`Could not open Instrument Output Port: ${ext.config.instrumentInputPort}`)
@@ -102,10 +131,13 @@ async function registerCallbacks() {
     log.warn(`No Instrument Output Port given. Without this, Light Guide highlighting will not work.`)
   }
 
-  // Light Guide Input
+  //////////////////////////////////////////
+  // LIGHT GUIDE INPUT                    //
+  //////////////////////////////////////////
+
   if (ext.config.lightGuideInputPort) {
     try {
-      console.debug(`Light Guide MIDI Input:`.padEnd(30, ' ') + ext.config.lightGuideInputPort)
+      log.info(`Connecting Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
       ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
       ext.lightGuideInput.addListener("noteon", (note) => {
         const noteNumber = note.dataBytes[0]
@@ -134,23 +166,25 @@ async function registerCallbacks() {
     log.warn(`No Light Guide MIDI input. The Light Guide Feature will not work.`)
   }
 
-  // Forward Instrument Input
+  //////////////////////////////////////////
+  // MIDI THRU FORWARDS                   //
+  //////////////////////////////////////////
+
   if (ext.input) {
     if (ext.config.forwardPort1) {
       try {
         ext.forwardPort1 = WebMidi.getOutputByName(ext.config.forwardPort1)
         ext.input.addForwarder(ext.forwardPort1)
-        log.info(`MIDI Forward Port 1:`.padEnd(30, ' ') + ext.config.forwardPort1)
+        log.info(`Connecting MIDI Forward Port 1: ${ext.config.forwardPort1}`)
       } catch (err) {
         log.warn(`Could not open optional Forward Port 1: ${ext.config.forwardPort1}`)
       }
     }
-  
     if (ext.config.forwardPort2) {
       try {
         ext.forwardPort2 = WebMidi.getOutputByName(ext.config.forwardPort2)
         ext.input.addForwarder(ext.forwardPort2)
-        log.info(`MIDI Forward Port 2:`.padEnd(30, ' ') + ext.config.forwardPort2)
+        log.info(`Connecting MIDI Forward Port 2: ${ext.config.forwardPort2}`)
       } catch (err) {
         log.warn(`Could not open optional Forward Port 2: ${ext.config.forwardPort2}`)
       }
@@ -159,6 +193,7 @@ async function registerCallbacks() {
     log.warn(`No Instrument input found, cannot forward MIDI from it.`)
   }
 
+  return
 }
 
 //////////////////////////////////////////
@@ -227,6 +262,51 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
   }
 }
 
+async function updateLayoutFromLinnStrument() {
+  
+  // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
+  const splitLeftOctave = await getLinnStrumentParamValue(36);
+  // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
+  const splitLeftTranspose = await getLinnStrumentParamValue(37);
+  // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
+  const rowOffset = await getLinnStrumentParamValue(227);
+  
+  let startNoteNumber = 30 + (-7 + splitLeftTranspose)
+  startNoteNumber += (-5 + splitLeftOctave) * 12
+
+  if (ext.config.rowOffset !== rowOffset || ext.config.startNoteNumber !== startNoteNumber) {
+    ext.config.rowOffset = rowOffset
+    ext.config.startNoteNumber = startNoteNumber
+    setupGrid()
+    updateSettingsInUI(ext.config)
+    log.info(`Detected layout change in LinnStrument: startNoteNumber=${startNoteNumber} rowOffset=${rowOffset}`)
+  }
+}
+
+async function getLinnStrumentParamValue(paramNumber) {
+  return new Promise((resolve, reject) => {
+    ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
+    ext.input.channels[1].addListener("nrpn", (msg) => {
+      // console.debug(`NRPN Return`, msg.message.data, msg)
+      if (msg.message.dataBytes[0] === 38) {
+        return resolve(msg.message.dataBytes[1])
+      }
+    }, { duration: 200})
+    setTimeout(() => {
+      reject(new Error(`Timeout when getting NRPN value readout`))
+    }, 300);
+  });
+}
+
+/**
+ * Converts NRPN number to array of [MSB, LSB]
+ */
+function nrpn(nrpnValue) {
+  const msb = nrpnValue >> 7;
+  const lsb = nrpnValue & 0x7F;
+  return [msb, lsb];
+}
+
 function debounce(func, time){
   var time = time || 100; // 100 by default if no param
   var timer;
@@ -235,3 +315,9 @@ function debounce(func, time){
       timer = setTimeout(func, time, event);
   };
 }
+
+const sleep = (ms) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};

@@ -10,6 +10,7 @@
 
 .log-entry {
   background: #f0f1f2;
+  font-size: 0.85em;
   padding: 2px 4px;
   border-radius: 3px;
   margin-bottom: 3px;
@@ -58,6 +59,10 @@
 #visualization .note-name-B
  {
   background-color: #e5ffe0;
+}
+#visualization .note-name-invalid {
+  background-image: linear-gradient(135deg, #fafafa 25%, #f2f2f2 25%, #f2f2f2 50%, #fafafa 50%, #fafafa 75%, #f2f2f2 75%, #f2f2f2 100%);
+  background-size: 16px 16px;
 }
 
 #visualization .highlight {

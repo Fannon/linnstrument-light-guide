@@ -9,21 +9,15 @@ import { highlightInstrumentXY } from "./main.js"
  * @returns 
  */
 export function generateGrid(startNoteNumber = 30, rowOffset = 5, colOffset = 1) {
-
-  const columns = ext.config.linnStrumentSize / 8
-
-  // First generate the grid with the note numbers as it is on the LinnStrument
   const grid = []
-
+  const columns = ext.config.linnStrumentSize / 8
+  
   for (let x = 0; x < columns; x++) {
     grid[x] = []
     for (let y = 0; y <= 7; y++) {
       grid[x][y] = startNoteNumber + x * colOffset + (y * rowOffset)
     }
   }
-
-  console.debug(`Generated Grid with start note="${startNoteNumber}" and row offset=${rowOffset}`, grid)
-
   return grid;
 }
 
@@ -83,11 +77,15 @@ export function drawGrid(grid) {
     v.appendChild(columnEl)
 
     for (let x = 0; x < rows; x++) {
+      let noteName = '╳'
+      let noteClass = 'invalid'
 
       const noteNumber = grid[x][y]
-      const note = new Note(noteNumber)
-      const noteName = note.identifier
-      const noteClass = `${note.name}${note.accidental ? '-sharp' : ''}`
+      if (noteNumber >= 0 && noteNumber < 128) {
+        const note = new Note(noteNumber)
+        noteName = note.identifier
+        noteClass = `${note.name}${note.accidental ? '-sharp' : ''}`
+      }
 
       const cellEl = document.createElement('span')
       cellEl.id = `cell-${x}-${y}`
