@@ -3,7 +3,7 @@ import { initConfig, resetConfig, saveConfig, updateSettingsInUI } from "./confi
 import { resetGrid, getGridDict, generateGrid, drawGrid } from "./grid.js";
 
 /**
- * Global namespace
+ * Global namespace, aliased to `window.ext`
  */
 const ext = {
   config: {},
@@ -40,6 +40,7 @@ async function init() {
 
   log.info(`Successfully initialized.`)
 
+  // Infer current layout / transposition from LinnStrument directly
   await updateLayoutFromLinnStrument()
   setInterval(async () => {
     await updateLayoutFromLinnStrument()
@@ -61,25 +62,11 @@ async function registerUiEvents() {
   document.getElementById("save").addEventListener("click", (event) => {
     saveConfig(ext.config, event)
   });
-  const inputElements = document.getElementsByTagName("input")
-  for (const el of inputElements) {
-    el.addEventListener("focusout", (event) => {
-      saveConfig(ext.config, event)
-    });
-  }
-  document.getElementById("reset").addEventListener("click", (event) => {
-    resetConfig(event)
-  });
-  document.getElementById("clear-log").addEventListener("click", () => {
-    document.getElementById("log").innerHTML = ''
-    ext.history.playedNotes = []
-    ext.stats.guideNoteTimings = []
-  });
-  document.getElementById("calculate-statistics").addEventListener("click", () => {
-    calculateStatistics()
-  });
+  document.getElementById("reset").addEventListener("click", resetConfig);
+  document.getElementById("clear-log").addEventListener("click", clearLog);
+  document.getElementById("calculate-statistics").addEventListener("click", calculateStatistics);
 
-  // UI Resize trigger
+  // UI Resize trigger, with debounce
   window.addEventListener("resize", debounce(() => {
     drawGrid(ext.grid)
   }, 200));
@@ -111,9 +98,6 @@ async function registerMidiEvents() {
           highlightVisualization(note.dataBytes[0], 0)
         }, ext.config.fadeOutDelay);
       });
-      // ext.input.channels[1].addListener("nrpn", (msg) => {
-      //   console.debug(`MIDI Input NRPN`, msg.message.data, msg)
-      // })
     } catch (err) {
       log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       log.error(err.toString())
@@ -146,25 +130,45 @@ async function registerMidiEvents() {
     try {
       log.info(`Connecting Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
       ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
-      ext.lightGuideInput.addListener("noteon", async (note) => {
-        console.warn('LIght Guide Input', note)
-        const noteNumber = note.dataBytes[0]
+
+      // Support "typical" Light Guide where noteon / noteoff MIDI events are used
+      ext.lightGuideInput.addListener("noteon", async (msg) => {
+        const noteNumber = msg.dataBytes[0]
         highlightInstrument(noteNumber, ext.config.guideHighlightColor)
         highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
 
         if (ext.config.guideNoteStatistics) {
-          const timing = await measureNoteTiming(note)
+          const timing = await measureNoteTiming(msg)
           logGuideNoteTiming(timing)
         }
       });
-
-      ext.lightGuideInput.addListener("noteoff", (note) => {
-        const noteNumber = note.dataBytes[0]
+      ext.lightGuideInput.addListener("noteoff", (msg) => {
+        const noteNumber = msg.dataBytes[0]
         setTimeout(() => {
           highlightInstrument(noteNumber, 0)
           highlightVisualization(noteNumber, 0, 'guide')
         }, ext.config.fadeOutDelay);
       });
+
+      // Support Synthesia Proprietary 1 (ONE Smart Piano) Light Guide input
+      ext.lightGuideInput.addListener("keyaftertouch", async (msg) => {
+        if (msg.value > 0) {
+          const noteNumber = msg.dataBytes[0]
+          highlightInstrument(noteNumber, ext.config.guideHighlightColor)
+          highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
+          if (ext.config.guideNoteStatistics) {
+            const timing = await measureNoteTiming(msg)
+            logGuideNoteTiming(timing)
+          }
+        } else {
+          const noteNumber = msg.note.number
+          setTimeout(() => {
+            highlightInstrument(noteNumber, 0)
+            highlightVisualization(noteNumber, 0, 'guide')
+          }, ext.config.fadeOutDelay);
+        }
+      });
+
     } catch (err) {
       log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       log.error(err.toString())
@@ -321,20 +325,20 @@ async function measureNoteTiming(msg) {
 
     // Detect notes played too early
     const earlyNote = ext.history.playedNotes.findLast((el) => {
-      return el.noteNumber === msg.note.number && el.time >= (now - ext.config.outOfTimeInterval)
+      return el.noteNumber === msg.note.number && el.time >= (now - ext.config.missedNoteThreshold)
     });
     if (earlyNote) {
       pastTimeOffset = earlyNote.time - now
       console.log('Found in history', earlyNote, pastTimeOffset)
-      if (Math.abs(pastTimeOffset) <= ext.config.inTimeInterval) {
-        // If note is played within `inTimeInterval`, consider it a match right away
+      if (Math.abs(pastTimeOffset) <= ext.config.inTimeThreshold) {
+        // If note is played within `inTimeThreshold`, consider it a match right away
         return resolve({
           noteNumber: msg.note.number,
           noteIdentifier: msg.note.identifier,
           timingOffset: pastTimeOffset
         })
-      } else if (Math.abs(pastTimeOffset) <= ext.config.outOfTimeInterval) {
-        // If found within `outOfTimeInterval`, mark it as possible match
+      } else if (Math.abs(pastTimeOffset) <= ext.config.missedNoteThreshold) {
+        // If found within `missedNoteThreshold`, mark it as possible match
         // but keep looking into future for more precise match
         foundMatch = true
         console.log('Found in history', pastTimeOffset)
@@ -342,7 +346,7 @@ async function measureNoteTiming(msg) {
     }
 
     // Detect notes played too late
-    const timeOut = pastTimeOffset ? Math.abs(pastTimeOffset) : ext.config.outOfTimeInterval
+    const timeOut = pastTimeOffset ? Math.abs(pastTimeOffset) : ext.config.missedNoteThreshold
     let poller;
     poller = setInterval(() => {
       const lateNote = ext.history.playedNotes.findLast((el) => {
@@ -369,7 +373,7 @@ async function measureNoteTiming(msg) {
         })
 
       }
-    }, ext.config.inTimeInterval / 4);
+    }, ext.config.inTimeThreshold / 4);
 
     setTimeout((timingOffset) => {
       clearInterval(poller);
@@ -393,9 +397,9 @@ async function measureNoteTiming(msg) {
 function logGuideNoteTiming(entry) {
   ext.stats.guideNoteTimings.push(entry)
 
-  if (Math.abs(entry.timingOffset) > ext.config.outOfTimeInterval) {
+  if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
     log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-danger">MISSED</span>`)
-  } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeInterval) {
+  } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
     if (entry.timingOffset < 0) {
       log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">${entry.timingOffset}ms</span>`)
     } else {
@@ -409,12 +413,12 @@ function logGuideNoteTiming(entry) {
 
   const pads = document.getElementsByClassName(`note-number-${entry.noteNumber}`)
   for (const pad of pads) {
-    if (Math.abs(entry.timingOffset) > ext.config.outOfTimeInterval) {
+    if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
       pad.classList.add("played-out-of-time");
       setTimeout(() => {
         pad.classList.remove("played-out-of-time");
       }, ext.config.guideNoteStaticsFadeOut)
-    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeInterval) {
+    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
       pad.classList.add("played-in-time");
       setTimeout(() => {
         pad.classList.remove("played-in-time");
@@ -435,6 +439,12 @@ function logGuideNoteTiming(entry) {
   return entry
 }
 
+function clearLog() {
+  document.getElementById("log").innerHTML = ''
+  ext.history.playedNotes = []
+  ext.stats.guideNoteTimings = []
+}
+
 function calculateStatistics() {
   const stats = {
     notesPlayed: ext.history.playedNotes.length,
@@ -448,9 +458,9 @@ function calculateStatistics() {
   let cumulatedTimingOffset = 0
   let timingOffsetCounter = 0
   for (const entry of ext.stats.guideNoteTimings) {
-    if (Math.abs(entry.timingOffset) > ext.config.outOfTimeInterval) {
+    if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
       stats.playedOutOfTime += 1
-    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeInterval) {
+    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
       stats.playedInTime += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)
