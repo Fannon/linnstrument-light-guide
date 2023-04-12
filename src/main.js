@@ -8,11 +8,11 @@ import { resetGrid, getGridDict, generateGrid, drawGrid } from "./grid.js";
 const ext = {
   config: {},
   history: {
-    playedNotes: [],
-    guideNotes: [],
+    playedNotes: []
   },
-
-  stats: {},
+  stats: {
+    guideNoteTimings: [],
+  },
 }
 window.ext = ext
 
@@ -27,13 +27,13 @@ async function init() {
 
   // Load Config
   ext.config = initConfig()
-  
+
   // Setup MIDI callbacks / event listeners
   await registerUiEvents()
   await registerMidiEvents()
 
   // Setup Grid
-  setupGrid()
+  await setupGrid()
 
   // Put LinnStrument out of User Firmware Mode (if it still is)
   ext.output.sendNrpnValue(nrpn(245), nrpn(0), { channels: 1 });
@@ -43,7 +43,7 @@ async function init() {
   await updateLayoutFromLinnStrument()
   setInterval(async () => {
     await updateLayoutFromLinnStrument()
-  }, 200);
+  }, ext.config.updateLayoutInterval);
 }
 
 async function setupGrid() {
@@ -57,24 +57,32 @@ async function setupGrid() {
  * Register UI Events and Listeners
  */
 async function registerUiEvents() {
-    // UI Buttons Listeners
-    document.getElementById("save").addEventListener("click", (event) => {
+  // UI Buttons Listeners
+  document.getElementById("save").addEventListener("click", (event) => {
+    saveConfig(ext.config, event)
+  });
+  const inputElements = document.getElementsByTagName("input")
+  for (const el of inputElements) {
+    el.addEventListener("focusout", (event) => {
       saveConfig(ext.config, event)
     });
-    const inputElements = document.getElementsByTagName("input")
-    for (const el of inputElements) {
-      el.addEventListener("focusout", (event) => {
-        saveConfig(ext.config, event)
-      });
-    }
-    document.getElementById("reset").addEventListener("click", (event) => {
-      resetConfig(event)
-    });
-  
-    // UI Resize trigger
-    window.addEventListener("resize", debounce(() => {
-      drawGrid(ext.grid)
-    }, 200 ));
+  }
+  document.getElementById("reset").addEventListener("click", (event) => {
+    resetConfig(event)
+  });
+  document.getElementById("clear-log").addEventListener("click", () => {
+    document.getElementById("log").innerHTML = ''
+    ext.history.playedNotes = []
+    ext.stats.guideNoteTimings = []
+  });
+  document.getElementById("calculate-statistics").addEventListener("click", () => {
+    calculateStatistics()
+  });
+
+  // UI Resize trigger
+  window.addEventListener("resize", debounce(() => {
+    drawGrid(ext.grid)
+  }, 200));
 }
 
 /**
@@ -94,8 +102,7 @@ async function registerMidiEvents() {
         const noteNumber = note.dataBytes[0]
         ext.history.playedNotes.push({
           time: Date.now(),
-          note: noteNumber,
-          full: note,
+          noteNumber: note.note.number,
         })
         highlightVisualization(noteNumber, ext.config.playedHighlightColor)
       });
@@ -139,17 +146,18 @@ async function registerMidiEvents() {
     try {
       log.info(`Connecting Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
       ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
-      ext.lightGuideInput.addListener("noteon", (note) => {
+      ext.lightGuideInput.addListener("noteon", async (note) => {
+        console.warn('LIght Guide Input', note)
         const noteNumber = note.dataBytes[0]
-        ext.history.guideNotes.push({
-          time: Date.now(),
-          note: noteNumber,
-          full: note,
-        })
         highlightInstrument(noteNumber, ext.config.guideHighlightColor)
         highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
+
+        if (ext.config.guideNoteStatistics) {
+          const timing = await measureNoteTiming(note)
+          logGuideNoteTiming(timing)
+        }
       });
-  
+
       ext.lightGuideInput.addListener("noteoff", (note) => {
         const noteNumber = note.dataBytes[0]
         setTimeout(() => {
@@ -161,7 +169,7 @@ async function registerMidiEvents() {
       log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       log.error(err.toString())
       console.error(err)
-    }  
+    }
   } else {
     log.warn(`No Light Guide MIDI input. The Light Guide Feature will not work.`)
   }
@@ -204,7 +212,6 @@ async function registerMidiEvents() {
  * Highlight pads on instrument by note number and color
  */
 export function highlightInstrument(noteNumber, color) {
-  console.debug(`highlightInstrument`, noteNumber, color)
   const noteCoords = ext.gridDict[noteNumber]
   if (noteCoords) {
     for (const noteCoord of noteCoords) {
@@ -237,7 +244,7 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
     for (const noteCoord of noteCoords) {
       const x = noteCoord[0]
       const y = noteCoord[1]
-  
+
       if (color === 0) {
         const cell = document.getElementById(`highlight-${type}-${x}-${y}`)
         if (cell) {
@@ -246,7 +253,7 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
       } else {
         const cell = document.getElementById(`cell-${x}-${y}`)
         const size = cell.offsetWidth
-    
+
         const highlightEl = document.createElement('span')
         highlightEl.id = `highlight-${type}-${x}-${y}`
         highlightEl.className = `highlight highlight-${type} highlight-${color}`
@@ -255,7 +262,7 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
         } else {
           highlightEl.style = `height: ${size / 2}px; width: ${size / 2}px; margin-left: ${size / 4}px;`
         }
-      
+
         cell.prepend(highlightEl)
       }
     }
@@ -263,14 +270,14 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
 }
 
 async function updateLayoutFromLinnStrument() {
-  
+
   // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
   const splitLeftOctave = await getLinnStrumentParamValue(36);
   // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
   const splitLeftTranspose = await getLinnStrumentParamValue(37);
   // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
   const rowOffset = await getLinnStrumentParamValue(227);
-  
+
   let startNoteNumber = 30 + (-7 + splitLeftTranspose)
   startNoteNumber += (-5 + splitLeftOctave) * 12
 
@@ -291,11 +298,182 @@ async function getLinnStrumentParamValue(paramNumber) {
       if (msg.message.dataBytes[0] === 38) {
         return resolve(msg.message.dataBytes[1])
       }
-    }, { duration: 200})
+    }, { duration: 200 })
     setTimeout(() => {
       reject(new Error(`Timeout when getting NRPN value readout`))
     }, 300);
   });
+}
+
+/**
+ * Measure how the guide note is actually played
+ * 
+ * TODO: This currently only checks if a played note is close in time to the guide note
+ *       There is no detection of wrong played notes that have no guide note, yet
+ */
+async function measureNoteTiming(msg) {
+  return new Promise((resolve) => {
+    let timingOffset
+    let pastTimeOffset
+    let futureTimeOffset
+    let foundMatch = false
+    const now = Date.now()
+
+    // Detect notes played too early
+    const earlyNote = ext.history.playedNotes.findLast((el) => {
+      return el.noteNumber === msg.note.number && el.time >= (now - ext.config.outOfTimeInterval)
+    });
+    if (earlyNote) {
+      pastTimeOffset = earlyNote.time - now
+      console.log('Found in history', earlyNote, pastTimeOffset)
+      if (Math.abs(pastTimeOffset) <= ext.config.inTimeInterval) {
+        // If note is played within `inTimeInterval`, consider it a match right away
+        return resolve({
+          noteNumber: msg.note.number,
+          noteIdentifier: msg.note.identifier,
+          timingOffset: pastTimeOffset
+        })
+      } else if (Math.abs(pastTimeOffset) <= ext.config.outOfTimeInterval) {
+        // If found within `outOfTimeInterval`, mark it as possible match
+        // but keep looking into future for more precise match
+        foundMatch = true
+        console.log('Found in history', pastTimeOffset)
+      }
+    }
+
+    // Detect notes played too late
+    const timeOut = pastTimeOffset ? Math.abs(pastTimeOffset) : ext.config.outOfTimeInterval
+    let poller;
+    poller = setInterval(() => {
+      const lateNote = ext.history.playedNotes.findLast((el) => {
+        return el.time > now && el.noteNumber === msg.note.number
+      });
+      if (lateNote) {
+        clearInterval(poller)
+        futureTimeOffset = lateNote.time - now
+        console.log('Found in future', lateNote, futureTimeOffset)
+        foundMatch = true
+
+        if (!pastTimeOffset) {
+          timingOffset = futureTimeOffset
+        } else if (Math.abs(futureTimeOffset < Math.abs(pastTimeOffset))) {
+          timingOffset = futureTimeOffset
+        } else {
+          timingOffset = pastTimeOffset
+        }
+
+        return resolve({
+          noteNumber: msg.note.number,
+          noteIdentifier: msg.note.identifier,
+          timingOffset
+        })
+
+      }
+    }, ext.config.inTimeInterval / 4);
+
+    setTimeout((timingOffset) => {
+      clearInterval(poller);
+      if (!foundMatch) {
+        return resolve({
+          noteNumber: msg.note.number,
+          noteIdentifier: msg.note.identifier,
+          timingOffset: Infinity,
+        })
+      } else {
+        return resolve({
+          noteNumber: msg.note.number,
+          noteIdentifier: msg.note.identifier,
+          timingOffset: timingOffset || pastTimeOffset || 7777
+        })
+      }
+    }, timeOut, timingOffset);
+  });
+}
+
+function logGuideNoteTiming(entry) {
+  ext.stats.guideNoteTimings.push(entry)
+
+  if (Math.abs(entry.timingOffset) > ext.config.outOfTimeInterval) {
+    log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-danger">MISSED</span>`)
+  } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeInterval) {
+    if (entry.timingOffset < 0) {
+      log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">${entry.timingOffset}ms</span>`)
+    } else {
+      log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">+${entry.timingOffset}ms</span>`)
+    }
+  } else if (entry.timingOffset < 0) {
+    log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-info">${entry.timingOffset}ms</span>`)
+  } else {
+    log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-primary">+${entry.timingOffset}ms</span>`)
+  }
+
+  const pads = document.getElementsByClassName(`note-number-${entry.noteNumber}`)
+  for (const pad of pads) {
+    if (Math.abs(entry.timingOffset) > ext.config.outOfTimeInterval) {
+      pad.classList.add("played-out-of-time");
+      setTimeout(() => {
+        pad.classList.remove("played-out-of-time");
+      }, ext.config.guideNoteStaticsFadeOut)
+    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeInterval) {
+      pad.classList.add("played-in-time");
+      setTimeout(() => {
+        pad.classList.remove("played-in-time");
+      }, ext.config.guideNoteStaticsFadeOut)
+    } else if (entry.timingOffset < 0) {
+      pad.classList.add("played-early");
+      setTimeout(() => {
+        pad.classList.remove("played-early");
+      }, ext.config.guideNoteStaticsFadeOut)
+    } else {
+      pad.classList.add("played-late");
+      setTimeout(() => {
+        pad.classList.remove("played-late");
+      }, ext.config.guideNoteStaticsFadeOut)
+    }
+  }
+
+  return entry
+}
+
+function calculateStatistics() {
+  const stats = {
+    notesPlayed: ext.history.playedNotes.length,
+    guideNotes: ext.stats.guideNoteTimings.length,
+    playedInTime: 0,
+    playedEarly: 0,
+    playedLate: 0,
+    playedOutOfTime: 0,
+    avgTimingOffset: 0
+  }
+  let cumulatedTimingOffset = 0
+  let timingOffsetCounter = 0
+  for (const entry of ext.stats.guideNoteTimings) {
+    if (Math.abs(entry.timingOffset) > ext.config.outOfTimeInterval) {
+      stats.playedOutOfTime += 1
+    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeInterval) {
+      stats.playedInTime += 1
+      timingOffsetCounter += 1
+      cumulatedTimingOffset += Math.abs(entry.timingOffset)
+    } else if (entry.timingOffset < 0) {
+      stats.playedEarly += 1
+      timingOffsetCounter += 1
+      cumulatedTimingOffset += Math.abs(entry.timingOffset)
+    } else {
+      stats.playedLate += 1
+      timingOffsetCounter += 1
+      cumulatedTimingOffset += Math.abs(entry.timingOffset)
+    }
+  }
+
+  stats.avgTimingOffset = Math.round(cumulatedTimingOffset / (timingOffsetCounter || 1))
+  stats.playedInTimeRatio = Math.round((stats.playedInTime / (stats.notesPlayed || 1)) * 100) / 100
+
+  console.log(stats)
+  let logMessage = 'Statistics: <br/>'
+  for (let name in stats) {
+    logMessage += `${name}: ${stats[name]}<br/>`
+  }
+  log.info(logMessage)
 }
 
 /**
@@ -307,12 +485,12 @@ function nrpn(nrpnValue) {
   return [msb, lsb];
 }
 
-function debounce(func, time){
+function debounce(func, time) {
   var time = time || 100; // 100 by default if no param
   var timer;
-  return function(event){
-      if(timer) clearTimeout(timer);
-      timer = setTimeout(func, time, event);
+  return function (event) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(func, time, event);
   };
 }
 
