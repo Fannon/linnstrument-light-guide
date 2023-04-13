@@ -40,8 +40,7 @@
       </div>
       <br />
       <div class="row text-left">
-        <div class="col-5">
-
+        <div class="col-3">
           <div class="card text-dark bg-light mb-3">
             <div class="card-header">General Configuration</div>
             <div class="card-body">
@@ -102,8 +101,9 @@
               </form>
             </div>
           </div>
-
-          <div class="card text-dark bg-light mb-3">
+        </div>
+        <div class="col-3">
+           <div class="card text-dark bg-light mb-3">
             <div class="card-header">MIDI Port Configuration</div>
             <div class="card-body">
               <form>
@@ -140,10 +140,8 @@
             </div>
           </div>
 
-          <button type="button" id="save" class="btn btn-success">Save Config</button>
-          <button type="button" id="reset" class="btn btn-danger">Reset Config</button>
         </div>
-        <div class="col-7">
+        <div class="col-6">
           <div class="card text-dark bg-light mb-3">
             <div class="card-header">Logs <small class="text-muted">(most recent on top)</small>
               <button id="clear-log" type="button" class="btn btn-secondary btn-sm">Clear Log & Statistics</button>
@@ -152,6 +150,11 @@
             <div class="card-body" id="log">
             </div>
           </div>
+        </div>
+        <div class="col-12">
+        
+          <button type="button" id="save" class="btn btn-success">Save Config</button>
+          <button type="button" id="reset" class="btn btn-danger">Reset Config</button>
         </div>
       </div>
     </main>
