@@ -474,7 +474,7 @@ function calculateStatistics() {
     }
   }
 
-  stats.accidentalNotes = stats.notesPlayed - stats.inTimeNotes - stats.earlyNotes - stats.lateNotes - stats.missedNotes
+  stats.accidentalNotes = Math.max(0, stats.notesPlayed - stats.inTimeNotes - stats.earlyNotes - stats.lateNotes - stats.missedNotes)
 
   stats.avgTimingOffset = Math.round(cumulatedTimingOffset / (timingOffsetCounter || 1))
   stats.inTimeNotesRatio = Math.round((stats.inTimeNotes / (stats.notesPlayed || 1)) * 100) / 100
@@ -497,7 +497,7 @@ function calculateStatistics() {
 
   let table = `Aggregated Statistics:`
   table += `<table class="table table-sm">`
-  table += `<thead><tr><th scope="col">SCORE: ${stats.score}/1000</th><th scope="col"># Notes</th><th scope="col">Ratio</th></tr></thead>`
+  table += `<thead><tr><th scope="col">Score: ${stats.score}/1000 | Avg. Offset: ${stats.avgTimingOffset}ms</th><th scope="col"># Notes</th><th scope="col">Ratio</th></tr></thead>`
   table += `<tbody>`
 
   table += `<tr><th>Notes Played</th><td>${stats.notesPlayed}</td><td>${Math.round(stats.playedVsGuideNotesRatio * 100)}%</td></tr>`
@@ -523,7 +523,6 @@ function checkForStatisticsDump() {
       ext.stats.guideNoteTimings = []
       ext.history.playedNotes = []
     }
-    resetGrid()
   }
 }
 
