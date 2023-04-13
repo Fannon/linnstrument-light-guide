@@ -1,6 +1,6 @@
 {
   "name": "linnstrument-light-guide",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Light Guide support for the LinnStrument, e.g. for Synthesia.",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   "author": "Simon Heimler",
   "license": "MIT",
   "dependencies": {
-
+    "webmidi": "^3.1.5"
   },
   "devDependencies": {
     "gh-pages": "^5.0.0",
