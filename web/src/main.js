@@ -42,12 +42,10 @@ async function init() {
 
   // Infer current layout / transposition from LinnStrument directly
   await updateLayoutFromLinnStrument()
-  setInterval(async () => {
-    await updateLayoutFromLinnStrument()
-  }, ext.config.updateStateInterval);
 
   setInterval(async () => {
     checkForStatisticsDump()
+    await updateLayoutFromLinnStrument()
   }, ext.config.updateStateInterval);
 }
 
@@ -156,9 +154,10 @@ async function registerMidiEvents() {
 
       // Support Synthesia Proprietary 1 (ONE Smart Piano) Light Guide input
       ext.lightGuideInput.addListener("keyaftertouch", async (msg) => {
-
         // Add note number offset for ONE Smart Piano 
         const noteNumber = msg.dataBytes[0] + 21
+
+        console.log(`Light Guide AT`, noteNumber, msg.value, msg.dataBytes)
 
         if (msg.value > 0) {
           highlightInstrument(noteNumber, ext.config.guideHighlightColor)
@@ -475,7 +474,7 @@ function calculateStatistics() {
     }
   }
 
-  stats.accidentalNotes = stats.notesPlayed - stats.guideNotes + stats.missedNotes
+  stats.accidentalNotes = stats.notesPlayed - stats.inTimeNotes - stats.earlyNotes - stats.lateNotes - stats.missedNotes
 
   stats.avgTimingOffset = Math.round(cumulatedTimingOffset / (timingOffsetCounter || 1))
   stats.inTimeNotesRatio = Math.round((stats.inTimeNotes / (stats.notesPlayed || 1)) * 100) / 100
@@ -486,24 +485,27 @@ function calculateStatistics() {
   stats.playedVsGuideNotesRatio = Math.round((stats.guideNotes / (stats.notesPlayed || 1)) * 100) / 100
 
   // Calculate score between 0 and 1000
-  // played early or late notes only give half points
-  // Any differences in played notes and guide notes counts like a missed note
+  // played early or late notes only give a quarter points
+  // Any differences in played notes and guide notes counts like two missed note
   stats.score = Math.round((stats.inTimeNotes / (stats.notesPlayed || 1)) * 1000)
-  stats.score += Math.round((stats.earlyNotes / (stats.notesPlayed || 1)) * 500)
-  stats.score += Math.round((stats.lateNotes / (stats.notesPlayed || 1)) * 500)
+  stats.score += Math.round((stats.earlyNotes / (stats.notesPlayed || 1)) * 250)
+  stats.score += Math.round((stats.lateNotes / (stats.notesPlayed || 1)) * 250)
+  stats.score -= Math.round((stats.accidentalNotes / (stats.notesPlayed || 1)) * 2000)
+  stats.score = Math.max(0, stats.score)
 
   console.debug(`Aggregated Statistics`, stats)
 
-  let table = `Aggregated Statistics: <table class="table table-sm">`
-  table += `<thead><tr><th scope="col">SCORE (0-1000): ${stats.score}</th><th scope="col"># Notes</th><th scope="col">Ratio</th></tr></thead>`
+  let table = `Aggregated Statistics:`
+  table += `<table class="table table-sm">`
+  table += `<thead><tr><th scope="col">SCORE: ${stats.score}/1000</th><th scope="col"># Notes</th><th scope="col">Ratio</th></tr></thead>`
   table += `<tbody>`
 
-  table += `<tr><th>Notes Played</th><td>${stats.notesPlayed}</td><td>${stats.playedVsGuideNotesRatio * 100}%</td></tr>`
-  table += `<tr><th class="text-success">In Time Notes</th><td>${stats.inTimeNotes}</td><td>${stats.inTimeNotesRatio * 100}%</td></tr>`
-  table += `<tr><th class="text-info">Early Notes</th><td>${stats.earlyNotes}</td><td>${stats.earlyNotesRatio * 100}%</td></tr>`
-  table += `<tr><th class="text-primary">Late Notes</th><td>${stats.lateNotes}</td><td>${stats.lateNotesRatio * 100}%</td></tr>`
-  table += `<tr><th class="text-warning">Missed Notes</th><td>${stats.missedNotes}</td><td>${stats.missedNotesRatio * 100}%</td></tr>`
-  table += `<tr><th class="text-danger">AccidentalNotes Notes</th><td>${stats.accidentalNotes}</td><td>${stats.accidentalNotesRatio * 100}%</td></tr>`
+  table += `<tr><th>Notes Played</th><td>${stats.notesPlayed}</td><td>${Math.round(stats.playedVsGuideNotesRatio * 100)}%</td></tr>`
+  table += `<tr><th class="text-success">In Time Notes</th><td>${stats.inTimeNotes}</td><td>${Math.round(stats.inTimeNotesRatio * 100)}%</td></tr>`
+  table += `<tr><th class="text-info">Early Notes</th><td>${stats.earlyNotes}</td><td>${Math.round(stats.earlyNotesRatio * 100)}%</td></tr>`
+  table += `<tr><th class="text-primary">Late Notes</th><td>${stats.lateNotes}</td><td>${Math.round(stats.lateNotesRatio * 100)}%</td></tr>`
+  table += `<tr><th class="text-warning">Missed Notes</th><td>${stats.missedNotes}</td><td>${Math.round(stats.missedNotesRatio * 100)}%</td></tr>`
+  table += `<tr><th class="text-danger">AccidentalNotes Notes</th><td>${stats.accidentalNotes}</td><td>${Math.round(stats.accidentalNotesRatio * 100)}%</td></tr>`
 
   table += `</tbody>`
   table += `</table>`
@@ -514,13 +516,14 @@ function calculateStatistics() {
 function checkForStatisticsDump() {
   if (ext.stats.guideNoteTimings.length > 0) {
     const lastItem = ext.stats.guideNoteTimings.slice(-1)[0] 
-    if (lastItem.time < Date.now() - ext.config.statisticsDumpInterval) {
+    if (lastItem.time < Date.now() - ext.config.playingBreakThreshold) {
       console.debug('Guide Note Timings', ext.stats.guideNoteTimings)
       console.debug('Played Note History', ext.history.playedNotes)
       calculateStatistics()
       ext.stats.guideNoteTimings = []
       ext.history.playedNotes = []
     }
+    resetGrid()
   }
 }
 

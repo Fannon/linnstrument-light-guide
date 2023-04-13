@@ -1,4 +1,4 @@
-import { highlightInstrumentXY } from "./main.js"
+import { highlightInstrumentXY, highlightVisualization } from "./main.js"
 
 /**
  * Calculate the grid for the LinnStrument
@@ -51,14 +51,16 @@ export function getGridDict(grid, startNoteNumber) {
  */
 export function resetGrid() {
   const columns = ext.config.linnStrumentSize / 8
+
+  // Reset all highlights on instrument
   for (let x = 0; x <= columns; x++) {
     for (let y = 0; y <= 7; y++) {
       highlightInstrumentXY(x, y, 0)
     }
   }
 
+  // Reset all highlights on visualization
   document.querySelectorAll('.highlight').forEach(e => e.remove());
-
 }
 
 export function drawGrid(grid) {
