@@ -63,7 +63,7 @@ Have fun :)
 
 ## TODO and Ideas
 
-* It would be nice to detect mistakes / timing problems and create statistics - based on a comparison of guide notes and actually played notes.
+* Create a GitHub issue in this project if you have an idea or run into a problem.
 
 ## Developer Guide
 
