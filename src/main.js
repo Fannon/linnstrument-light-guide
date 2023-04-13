@@ -44,7 +44,11 @@ async function init() {
   await updateLayoutFromLinnStrument()
   setInterval(async () => {
     await updateLayoutFromLinnStrument()
-  }, ext.config.updateLayoutInterval);
+  }, ext.config.updateStateInterval);
+
+  setInterval(async () => {
+    checkForStatisticsDump()
+  }, ext.config.updateStateInterval);
 }
 
 async function setupGrid() {
@@ -138,7 +142,7 @@ async function registerMidiEvents() {
         highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
 
         if (ext.config.guideNoteStatistics) {
-          const timing = await measureNoteTiming(msg)
+          const timing = await measureNoteTiming(noteNumber)
           logGuideNoteTiming(timing)
         }
       });
@@ -152,17 +156,18 @@ async function registerMidiEvents() {
 
       // Support Synthesia Proprietary 1 (ONE Smart Piano) Light Guide input
       ext.lightGuideInput.addListener("keyaftertouch", async (msg) => {
-        console.debug(msg);
+
+        // Add note number offset for ONE Smart Piano 
+        const noteNumber = msg.dataBytes[0] + 21
+
         if (msg.value > 0) {
-          const noteNumber = msg.dataBytes[0] + 21
           highlightInstrument(noteNumber, ext.config.guideHighlightColor)
           highlightVisualization(noteNumber, ext.config.guideHighlightColor, 'guide', true)
           if (ext.config.guideNoteStatistics) {
-            const timing = await measureNoteTiming(msg)
+            const timing = await measureNoteTiming(noteNumber)
             logGuideNoteTiming(timing)
           }
         } else {
-          const noteNumber = msg.dataBytes[0] + 21
           setTimeout(() => {
             highlightInstrument(noteNumber, 0)
             highlightVisualization(noteNumber, 0, 'guide')
@@ -316,28 +321,31 @@ async function getLinnStrumentParamValue(paramNumber) {
  * TODO: This currently only checks if a played note is close in time to the guide note
  *       There is no detection of wrong played notes that have no guide note, yet
  */
-async function measureNoteTiming(msg) {
+async function measureNoteTiming(noteNumber) {
   return new Promise((resolve) => {
-    let timingOffset
     let pastTimeOffset
     let futureTimeOffset
     let foundMatch = false
     const now = Date.now()
 
+    const result = {
+      noteNumber: noteNumber,
+      noteIdentifier: new Note(noteNumber).identifier,
+      time: now,
+      timingOffset: Infinity,
+    }
+
     // Detect notes played too early
     const earlyNote = ext.history.playedNotes.findLast((el) => {
-      return el.noteNumber === msg.note.number && el.time >= (now - ext.config.missedNoteThreshold)
+      return el.noteNumber === noteNumber && el.time >= (now - ext.config.missedNoteThreshold)
     });
     if (earlyNote) {
       pastTimeOffset = earlyNote.time - now
       console.log('Found in history', earlyNote, pastTimeOffset)
       if (Math.abs(pastTimeOffset) <= ext.config.inTimeThreshold) {
         // If note is played within `inTimeThreshold`, consider it a match right away
-        return resolve({
-          noteNumber: msg.note.number,
-          noteIdentifier: msg.note.identifier,
-          timingOffset: pastTimeOffset
-        })
+        result.timingOffset = pastTimeOffset
+        return resolve(result)
       } else if (Math.abs(pastTimeOffset) <= ext.config.missedNoteThreshold) {
         // If found within `missedNoteThreshold`, mark it as possible match
         // but keep looking into future for more precise match
@@ -351,7 +359,7 @@ async function measureNoteTiming(msg) {
     let poller;
     poller = setInterval(() => {
       const lateNote = ext.history.playedNotes.findLast((el) => {
-        return el.time > now && el.noteNumber === msg.note.number
+        return el.time > now && el.noteNumber === noteNumber
       });
       if (lateNote) {
         clearInterval(poller)
@@ -360,18 +368,14 @@ async function measureNoteTiming(msg) {
         foundMatch = true
 
         if (!pastTimeOffset) {
-          timingOffset = futureTimeOffset
+          result.timingOffset = futureTimeOffset
         } else if (Math.abs(futureTimeOffset < Math.abs(pastTimeOffset))) {
-          timingOffset = futureTimeOffset
+          result.timingOffset = futureTimeOffset
         } else {
-          timingOffset = pastTimeOffset
+          result.timingOffset = pastTimeOffset
         }
 
-        return resolve({
-          noteNumber: msg.note.number,
-          noteIdentifier: msg.note.identifier,
-          timingOffset
-        })
+        return resolve(result)
 
       }
     }, ext.config.inTimeThreshold / 4);
@@ -379,19 +383,12 @@ async function measureNoteTiming(msg) {
     setTimeout((timingOffset) => {
       clearInterval(poller);
       if (!foundMatch) {
-        return resolve({
-          noteNumber: msg.note.number,
-          noteIdentifier: msg.note.identifier,
-          timingOffset: Infinity,
-        })
+        return resolve(result)
       } else {
-        return resolve({
-          noteNumber: msg.note.number,
-          noteIdentifier: msg.note.identifier,
-          timingOffset: timingOffset || pastTimeOffset || 7777
-        })
+        result.timingOffset = result.timingOffset || pastTimeOffset || 7777
+        return resolve(result)
       }
-    }, timeOut, timingOffset);
+    }, timeOut, result.timingOffset);
   });
 }
 
@@ -453,41 +450,78 @@ function calculateStatistics() {
   const stats = {
     notesPlayed: ext.history.playedNotes.length,
     guideNotes: ext.stats.guideNoteTimings.length,
-    playedInTime: 0,
-    playedEarly: 0,
-    playedLate: 0,
-    playedOutOfTime: 0,
-    avgTimingOffset: 0
+    inTimeNotes: 0,
+    earlyNotes: 0,
+    lateNotes: 0,
+    missedNotes: 0,
   }
   let cumulatedTimingOffset = 0
   let timingOffsetCounter = 0
   for (const entry of ext.stats.guideNoteTimings) {
     if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
-      stats.playedOutOfTime += 1
+      stats.missedNotes += 1
     } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
-      stats.playedInTime += 1
+      stats.inTimeNotes += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)
     } else if (entry.timingOffset < 0) {
-      stats.playedEarly += 1
+      stats.earlyNotes += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)
     } else {
-      stats.playedLate += 1
+      stats.lateNotes += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)
     }
   }
 
-  stats.avgTimingOffset = Math.round(cumulatedTimingOffset / (timingOffsetCounter || 1))
-  stats.playedInTimeRatio = Math.round((stats.playedInTime / (stats.notesPlayed || 1)) * 100) / 100
+  stats.accidentalNotes = stats.notesPlayed - stats.guideNotes + stats.missedNotes
 
-  console.log(stats)
-  let logMessage = 'Statistics: <br/>'
-  for (let name in stats) {
-    logMessage += `${name}: ${stats[name]}<br/>`
+  stats.avgTimingOffset = Math.round(cumulatedTimingOffset / (timingOffsetCounter || 1))
+  stats.inTimeNotesRatio = Math.round((stats.inTimeNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.earlyNotesRatio = Math.round((stats.earlyNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.lateNotesRatio = Math.round((stats.lateNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.missedNotesRatio = Math.round((stats.missedNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.accidentalNotesRatio = Math.round((stats.accidentalNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.playedVsGuideNotesRatio = Math.round((stats.guideNotes / (stats.notesPlayed || 1)) * 100) / 100
+
+  // Calculate score between 0 and 1000
+  // played early or late notes only give half points
+  // Any differences in played notes and guide notes counts like a missed note
+  stats.score = Math.round((stats.inTimeNotes / (stats.notesPlayed || 1)) * 1000)
+  stats.score += Math.round((stats.earlyNotes / (stats.notesPlayed || 1)) * 500)
+  stats.score += Math.round((stats.lateNotes / (stats.notesPlayed || 1)) * 500)
+
+  console.debug(`Aggregated Statistics`, stats)
+
+  let table = `Aggregated Statistics: <table class="table table-sm">`
+  table += `<thead><tr><th scope="col">SCORE (0-1000): ${stats.score}</th><th scope="col"># Notes</th><th scope="col">Ratio</th></tr></thead>`
+  table += `<tbody>`
+
+  table += `<tr><th>Notes Played</th><td>${stats.notesPlayed}</td><td>${stats.playedVsGuideNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-success">In Time Notes</th><td>${stats.inTimeNotes}</td><td>${stats.inTimeNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-info">Early Notes</th><td>${stats.earlyNotes}</td><td>${stats.earlyNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-primary">Late Notes</th><td>${stats.lateNotes}</td><td>${stats.lateNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-warning">Missed Notes</th><td>${stats.missedNotes}</td><td>${stats.missedNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-danger">AccidentalNotes Notes</th><td>${stats.accidentalNotes}</td><td>${stats.accidentalNotesRatio * 100}%</td></tr>`
+
+  table += `</tbody>`
+  table += `</table>`
+
+  log.info(table)
+}
+
+function checkForStatisticsDump() {
+  if (ext.stats.guideNoteTimings.length > 0) {
+    const lastItem = ext.stats.guideNoteTimings.slice(-1)[0] 
+    if (lastItem.time < Date.now() - ext.config.statisticsDumpInterval) {
+      console.debug('Guide Note Timings', ext.stats.guideNoteTimings)
+      console.debug('Played Note History', ext.history.playedNotes)
+      calculateStatistics()
+      ext.stats.guideNoteTimings = []
+      ext.history.playedNotes = []
+    }
   }
-  log.info(logMessage)
 }
 
 /**

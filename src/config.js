@@ -1,12 +1,19 @@
 export const defaultConfig = {
-  // MIDI Port Names
+
+  //////////////////////////////////////////
+  // MIDI Port Names                      //
+  //////////////////////////////////////////
+
   instrumentInputPort: 'LinnStrument MIDI',
   instrumentOutputPort: 'LinnStrument MIDI',
   lightGuideInputPort: 'Loop Back C',
   forwardPort1: 'Loop Forward A',
-  forwardPort2: 'Loop Forward B', // Optional
-  
-  // General Options
+  forwardPort2: 'Loop Forward B',
+
+  //////////////////////////////////////////
+  // General Options                      //
+  //////////////////////////////////////////
+
   playedHighlightColor: 1,
   guideHighlightColor: 3,
   linnStrumentSize: 128,
@@ -21,13 +28,19 @@ export const defaultConfig = {
    */
   missedNoteThreshold: 500,
 
-  // Advanced Options (no UI yet)
+  //////////////////////////////////////////
+  // Advanced Options (no UI)             //
+  //////////////////////////////////////////
+
+  /** Interval for updating the state, e.g. checking LinnStrument layout,  */
+  updateStateInterval: 200, // in ms
   guideNoteStatistics: true,
   /** How long the guide note feedback stays visible (colorized border around the cell) (in ms) */
   guideNoteStaticsFadeOut: 1500,
   /** How long a played note / guide note stays after note off (in ms) */
   fadeOutDelay: 200,
-  updateLayoutInterval: 200, // in ms
+  /** Time after no guide notes until statistics get printed and reset */
+  statisticsDumpInterval: 3000, // in ms
 
 }
 
