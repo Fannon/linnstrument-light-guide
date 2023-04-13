@@ -323,7 +323,6 @@ async function getLinnStrumentParamValue(paramNumber) {
  */
 async function measureNoteTiming(noteNumber) {
   return new Promise((resolve) => {
-    let timingOffset
     let pastTimeOffset
     let futureTimeOffset
     let foundMatch = false
@@ -332,7 +331,8 @@ async function measureNoteTiming(noteNumber) {
     const result = {
       noteNumber: noteNumber,
       noteIdentifier: new Note(noteNumber).identifier,
-      time: now
+      time: now,
+      timingOffset: Infinity,
     }
 
     // Detect notes played too early
@@ -383,13 +383,12 @@ async function measureNoteTiming(noteNumber) {
     setTimeout((timingOffset) => {
       clearInterval(poller);
       if (!foundMatch) {
-        result.timingOffset = Infinity
         return resolve(result)
       } else {
-        result.timingOffset = timingOffset || pastTimeOffset || 7777
+        result.timingOffset = result.timingOffset || pastTimeOffset || 7777
         return resolve(result)
       }
-    }, timeOut, timingOffset);
+    }, timeOut, result.timingOffset);
   });
 }
 
@@ -451,41 +450,65 @@ function calculateStatistics() {
   const stats = {
     notesPlayed: ext.history.playedNotes.length,
     guideNotes: ext.stats.guideNoteTimings.length,
-    playedInTime: 0,
-    playedEarly: 0,
-    playedLate: 0,
-    playedOutOfTime: 0,
-    avgTimingOffset: 0
+    inTimeNotes: 0,
+    earlyNotes: 0,
+    lateNotes: 0,
+    missedNotes: 0,
   }
   let cumulatedTimingOffset = 0
   let timingOffsetCounter = 0
   for (const entry of ext.stats.guideNoteTimings) {
     if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
-      stats.playedOutOfTime += 1
+      stats.missedNotes += 1
     } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
-      stats.playedInTime += 1
+      stats.inTimeNotes += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)
     } else if (entry.timingOffset < 0) {
-      stats.playedEarly += 1
+      stats.earlyNotes += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)
     } else {
-      stats.playedLate += 1
+      stats.lateNotes += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)
     }
   }
 
+  stats.accidentalNotes = stats.notesPlayed - stats.guideNotes + stats.missedNotes
+
   stats.avgTimingOffset = Math.round(cumulatedTimingOffset / (timingOffsetCounter || 1))
-  stats.playedInTimeRatio = Math.round((stats.playedInTime / (stats.notesPlayed || 1)) * 100) / 100
+  stats.inTimeNotesRatio = Math.round((stats.inTimeNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.earlyNotesRatio = Math.round((stats.earlyNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.lateNotesRatio = Math.round((stats.lateNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.missedNotesRatio = Math.round((stats.missedNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.accidentalNotesRatio = Math.round((stats.accidentalNotes / (stats.notesPlayed || 1)) * 100) / 100
+  stats.playedVsGuideNotesRatio = Math.round((stats.guideNotes / (stats.notesPlayed || 1)) * 100) / 100
+
+  // Calculate score between 0 and 1000
+  // played early or late notes only give half points
+  // Any differences in played notes and guide notes counts like a missed note
+  stats.score = Math.round((stats.inTimeNotes / (stats.notesPlayed || 1)) * 1000)
+  stats.score += Math.round((stats.earlyNotes / (stats.notesPlayed || 1)) * 500)
+  stats.score += Math.round((stats.lateNotes / (stats.notesPlayed || 1)) * 500)
 
   console.debug(`Aggregated Statistics`, stats)
-  let logMessage = 'Statistics: <br/>'
-  for (let name in stats) {
-    logMessage += `${name}: ${stats[name]}<br/>`
-  }
-  log.info(logMessage)
+
+  let table = `Aggregated Statistics: <table class="table table-sm">`
+  table += `<thead><tr><th scope="col">SCORE (0-1000): ${stats.score}</th><th scope="col"># Notes</th><th scope="col">Ratio</th></tr></thead>`
+  table += `<tbody>`
+
+  table += `<tr><th>Notes Played</th><td>${stats.notesPlayed}</td><td>${stats.playedVsGuideNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-success">In Time Notes</th><td>${stats.inTimeNotes}</td><td>${stats.inTimeNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-info">Early Notes</th><td>${stats.earlyNotes}</td><td>${stats.earlyNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-primary">Late Notes</th><td>${stats.lateNotes}</td><td>${stats.lateNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-warning">Missed Notes</th><td>${stats.missedNotes}</td><td>${stats.missedNotesRatio * 100}%</td></tr>`
+  table += `<tr><th class="text-danger">AccidentalNotes Notes</th><td>${stats.accidentalNotes}</td><td>${stats.accidentalNotesRatio * 100}%</td></tr>`
+
+  table += `</tbody>`
+  table += `</table>`
+
+  log.info(table)
 }
 
 function checkForStatisticsDump() {

@@ -45,7 +45,8 @@ Personally, I'm also using a DAW to hear my own notes, synthesia notes and drums
 ![Synthesia Input Config](./assets/synthesia-input.png)
 
 * Configure Synthesia Music Output:
-  * Send "Key Lights" to `Loop Back C`, using the "Finger-based channel" or "ONE Smart Piano" mode.
+  * Send "Key Lights" to `Loop Back C`, using the "ONE Smart Piano" or any of the channels mode, e.g. "Finger-based channel".
+    * The "ONE Smart Piano" option seems to work most reliable?
   * Optional: Send "Background" to `Loop Back A`.
   * Optional: Send "Percussion, Metronome" to `Loop Back B`.
 

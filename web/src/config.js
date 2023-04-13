@@ -40,7 +40,7 @@ export const defaultConfig = {
   /** How long a played note / guide note stays after note off (in ms) */
   fadeOutDelay: 200,
   /** Time after no guide notes until statistics get printed and reset */
-  statisticsDumpInterval: 5000, // in ms
+  statisticsDumpInterval: 3000, // in ms
 
 }
 
