@@ -13,6 +13,8 @@ In principle this app could work with any program that sends Light Guide MIDI in
 
 It can also be used in general to visualize the grid layout and how it is played. 
 
+See also this demo GIF (click play if necessary):
+
 ![Demo GIF](./assets/linnstrument-light-guide-demo.gif)
 
 ## User Guide
