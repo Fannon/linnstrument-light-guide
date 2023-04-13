@@ -285,7 +285,11 @@ async function updateLayoutFromLinnStrument() {
   // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
   const splitLeftTranspose = await getLinnStrumentParamValue(37);
   // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
-  const rowOffset = await getLinnStrumentParamValue(227);
+  let rowOffset = await getLinnStrumentParamValue(227);
+
+  if (rowOffset === 0) {
+    rowOffset = ext.config.linnStrumentSize / 8
+  }
 
   let startNoteNumber = 30 + (-7 + splitLeftTranspose)
   startNoteNumber += (-5 + splitLeftOctave) * 12
