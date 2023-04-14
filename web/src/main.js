@@ -72,6 +72,12 @@ async function registerUiEvents() {
   window.addEventListener("resize", debounce(() => {
     drawGrid(ext.grid)
   }, 200));
+
+  // Enable tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
 }
 
 /**
@@ -339,8 +345,8 @@ async function measureNoteTiming(noteNumber) {
     if (earlyNote) {
       pastTimeOffset = earlyNote.time - now
       console.log('Found in history', earlyNote, pastTimeOffset)
-      if (Math.abs(pastTimeOffset) <= ext.config.inTimeThreshold) {
-        // If note is played within `inTimeThreshold`, consider it a match right away
+      if (Math.abs(pastTimeOffset) <= ext.config.delayedNoteThreshold) {
+        // If note is played within `delayedNoteThreshold`, consider it a match right away
         result.timingOffset = pastTimeOffset
         return resolve(result)
       } else if (Math.abs(pastTimeOffset) <= ext.config.missedNoteThreshold) {
@@ -375,7 +381,7 @@ async function measureNoteTiming(noteNumber) {
         return resolve(result)
 
       }
-    }, ext.config.inTimeThreshold / 4);
+    }, ext.config.delayedNoteThreshold / 4);
 
     setTimeout((timingOffset) => {
       clearInterval(poller);
@@ -397,7 +403,7 @@ function logGuideNoteTiming(entry) {
 
   if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
     log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-danger">MISSED</span>`)
-  } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
+  } else if (Math.abs(entry.timingOffset) <= ext.config.delayedNoteThreshold) {
     if (entry.timingOffset < 0) {
       log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">${entry.timingOffset}ms</span>`)
     } else {
@@ -416,7 +422,7 @@ function logGuideNoteTiming(entry) {
       setTimeout(() => {
         pad.classList.remove("played-out-of-time");
       }, ext.config.guideNoteStaticsFadeOut)
-    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
+    } else if (Math.abs(entry.timingOffset) <= ext.config.delayedNoteThreshold) {
       pad.classList.add("played-in-time");
       setTimeout(() => {
         pad.classList.remove("played-in-time");
@@ -457,7 +463,7 @@ function calculateStatistics() {
   for (const entry of ext.stats.guideNoteTimings) {
     if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
       stats.missedNotes += 1
-    } else if (Math.abs(entry.timingOffset) <= ext.config.inTimeThreshold) {
+    } else if (Math.abs(entry.timingOffset) <= ext.config.delayedNoteThreshold) {
       stats.inTimeNotes += 1
       timingOffsetCounter += 1
       cumulatedTimingOffset += Math.abs(entry.timingOffset)

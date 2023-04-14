@@ -21,12 +21,12 @@ export const defaultConfig = {
   colOffset: 1,
   startNoteNumber: 30,
   /** If the time offset is lower than this, the note is considered "in-time" (in ms) */
-  inTimeThreshold: 100,
+  delayedNoteThreshold: 50,
   /** 
    * If the time offset is higher than this, the note is considered a missed note. (in ms)
    * After this time, the app will stop looking and consider it a missed note. 
    */
-  missedNoteThreshold: 500,
+  missedNoteThreshold: 200,
 
   //////////////////////////////////////////
   // Advanced Options (no UI)             //
@@ -66,7 +66,7 @@ export function updateSettingsInUI(config) {
   document.getElementById('guideHighlightColor').value = config.guideHighlightColor.toString()
   document.getElementById('playedHighlightColor').value = config.playedHighlightColor.toString()
   document.getElementById('linnStrumentSize').value = config.linnStrumentSize.toString()
-  document.getElementById('inTimeThreshold').value = config.inTimeThreshold.toString()
+  document.getElementById('delayedNoteThreshold').value = config.delayedNoteThreshold.toString()
   document.getElementById('missedNoteThreshold').value = config.missedNoteThreshold.toString()
 
   // instrumentInputPort
@@ -127,7 +127,7 @@ export function saveConfig(config, event) {
   config.guideHighlightColor = parseInt(document.getElementById("guideHighlightColor").value);
   config.playedHighlightColor = parseInt(document.getElementById("playedHighlightColor").value);
   config.linnStrumentSize = parseInt(document.getElementById("linnStrumentSize").value);
-  config.inTimeThreshold = parseInt(document.getElementById("inTimeThreshold").value);
+  config.delayedNoteThreshold = parseInt(document.getElementById("delayedNoteThreshold").value);
   config.missedNoteThreshold = parseInt(document.getElementById("missedNoteThreshold").value);
 
   config.instrumentInputPort = document.getElementById("instrumentInputPort").value;
