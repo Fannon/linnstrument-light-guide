@@ -96,9 +96,7 @@ async function registerMidiEvents() {
         highlightVisualization(noteNumber, ext.config.playedHighlightColor)
       });
       ext.input.addListener("noteoff", (note) => {
-        setTimeout(() => {
-          highlightVisualization(note.dataBytes[0], 0)
-        }, ext.config.fadeOutDelay);
+        highlightVisualization(note.dataBytes[0], 0)
       });
     } catch (err) {
       log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
@@ -146,10 +144,8 @@ async function registerMidiEvents() {
       });
       ext.lightGuideInput.addListener("noteoff", (msg) => {
         const noteNumber = msg.dataBytes[0]
-        setTimeout(() => {
-          highlightInstrument(noteNumber, 0)
-          highlightVisualization(noteNumber, 0, 'guide')
-        }, ext.config.fadeOutDelay);
+        highlightInstrument(noteNumber, 0)
+        highlightVisualization(noteNumber, 0, 'guide')
       });
 
       // Support Synthesia Proprietary 1 (ONE Smart Piano) Light Guide input
@@ -167,10 +163,8 @@ async function registerMidiEvents() {
             logGuideNoteTiming(timing)
           }
         } else {
-          setTimeout(() => {
-            highlightInstrument(noteNumber, 0)
-            highlightVisualization(noteNumber, 0, 'guide')
-          }, ext.config.fadeOutDelay);
+          highlightInstrument(noteNumber, 0)
+          highlightVisualization(noteNumber, 0, 'guide')
         }
       });
 
