@@ -486,7 +486,6 @@ function calculateStatistics() {
   stats.lateNotesRatio = Math.round((stats.lateNotes / (stats.notesPlayed || 1)) * 100) / 100
   stats.missedNotesRatio = Math.round((stats.missedNotes / (stats.notesPlayed || 1)) * 100) / 100
   stats.accidentalNotesRatio = Math.round((stats.accidentalNotes / (stats.notesPlayed || 1)) * 100) / 100
-  stats.playedVsGuideNotesRatio = Math.round((stats.guideNotes / (stats.notesPlayed || 1)) * 100) / 100
 
   // Calculate score between 0 and 1000
   // played early or late notes only give a quarter points
@@ -504,7 +503,7 @@ function calculateStatistics() {
   table += `<thead><tr><th scope="col">Score: ${stats.score}/1000 | Avg. Offset: ${stats.avgTimingOffset}ms</th><th scope="col"># Notes</th><th scope="col">Ratio</th></tr></thead>`
   table += `<tbody>`
 
-  table += `<tr><th>Notes Played</th><td>${stats.notesPlayed}</td><td>${Math.round(stats.playedVsGuideNotesRatio * 100)}%</td></tr>`
+  table += `<tr><th>Notes Played</th><td>${stats.notesPlayed}</td><td></td></tr>`
   table += `<tr><th class="text-success">In Time Notes</th><td>${stats.inTimeNotes}</td><td>${Math.round(stats.inTimeNotesRatio * 100)}%</td></tr>`
   table += `<tr><th class="text-info">Early Notes</th><td>${stats.earlyNotes}</td><td>${Math.round(stats.earlyNotesRatio * 100)}%</td></tr>`
   table += `<tr><th class="text-primary">Late Notes</th><td>${stats.lateNotes}</td><td>${Math.round(stats.lateNotesRatio * 100)}%</td></tr>`
