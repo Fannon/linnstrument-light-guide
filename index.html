@@ -11,6 +11,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <link rel="stylesheet" href="./css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
 </head>
 
@@ -20,7 +21,7 @@
       <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
         <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
           <title>LinnStrument Light Guide</title> 
-          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.0</small></span>
+          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.0.2</small></span>
         </a>
 
         <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
@@ -41,13 +42,13 @@
       <br />
       <div class="row">
         <div class="col-6 text-start">
-          <button type="button" id="reset-grid" class="btn btn-secondary">Reset Grid</button>
-          <button type="button" id="save" class="btn btn-success">Save & Apply Config</button>
-          <button type="button" id="reset" class="btn btn-danger">Reset Config</button>
+          <button type="button" id="reset-grid" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Resets all highlights on the visualization and the LinnStrument.">Reset Grid</button>
+          <button type="button" id="save" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="top" title="After changing any of the below settings, press Save & Apply.">Save & Apply Config</button>
+          <button type="button" id="reset" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Reset Config to defaults, in case there are issues.">Reset Config</button>
         </div>
         <div class="col-6 text-end">
-          <button id="calculate-statistics" type="button" class="btn btn-secondary">Calculate Statistics</button>
-          <button id="clear-log" type="button" class="btn btn-secondary">Clear Log</button>
+          <button id="calculate-statistics" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculates statistics on how the played notes compare against the Light Guide notes. This also happens automatically after some play breaks.">Calculate Statistics</button>
+          <button id="clear-log" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Clear the log below. Also clears history and statistics.">Clear Log</button>
         </div>
       </div>
       <br />
@@ -58,13 +59,13 @@
             <div class="card-body">
               <form>
                 <label for="startNoteNumber" class="form-label">Start MIDI Note Number</label>
-                <input id="startNoteNumber" class="form-control" type="text" placeholder="30">
+                <input id="startNoteNumber" class="form-control" type="text" placeholder="30" data-bs-toggle="tooltip" data-bs-placement="top" title="MIDI Note Number for the first pad in the bottom left corner. Should be auto-detected and synced from LinnStrument settings.">
 
                 <label for="rowOffset" class="form-label">Row Offset</label>
-                <input id="rowOffset" class="form-control" type="text" placeholder="5">
+                <input id="rowOffset" class="form-control" type="text" placeholder="5"  data-bs-toggle="tooltip" data-bs-placement="top" title="Row Offset. Should be auto-detected and synced from LinnStrument settings.">
 
                 <label for="guideHighlightColor" class="form-label">Light Guide Note Color</label>
-                <select id="guideHighlightColor" class="form-select">
+                <select id="guideHighlightColor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="top" title="Color for Light Guide highlights on LinnStrument and visualization.">
                   <option value="0" selected>As set in Note Lights settings</option>
                   <option value="1">Red</option>
                   <option value="2">Yellow</option>
@@ -80,7 +81,7 @@
                 </select>
 
                 <label for="playedHighlightColor" class="form-label">Played Guide Note Color</label>
-                <select id="playedHighlightColor" class="form-select">
+                <select id="playedHighlightColor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="top" title="Color for played note highlights on visualization. Does not change the LinnStrument setting.">
                   <option value="0" selected>As set in Note Lights settings</option>
                   <option value="1">Red</option>
                   <option value="2">Yellow</option>
@@ -101,10 +102,10 @@
                   <option>200</option>
                 </select>
 
-                <label for="inTimeThreshold" class="form-label">Note in-time interval (ms)</label>
-                <input id="inTimeThreshold" class="form-control" type="text" placeholder="1">
+                <label for="delayedNoteThreshold" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Below this timing offset, a note is considered in-time. Above, its considered early or late.">Delayed Note Threshold (ms)</label>
+                <input id="delayedNoteThreshold" class="form-control" type="text" placeholder="1">
 
-                <label for="missedNoteThreshold" class="form-label">Note out-of-time interval (ms)</label>
+                <label for="missedNoteThreshold" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Above this timing offset, a note is consider a missed note.">Missed Note Threshold (ms)</label>
                 <input id="missedNoteThreshold" class="form-control" type="text" placeholder="1">
 
               </form>
