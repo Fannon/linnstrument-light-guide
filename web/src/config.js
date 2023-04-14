@@ -37,8 +37,6 @@ export const defaultConfig = {
   guideNoteStatistics: true,
   /** How long the guide note feedback stays visible (colorized border around the cell) (in ms) */
   guideNoteStaticsFadeOut: 1500,
-  /** How long a played note / guide note stays after note off (in ms) */
-  fadeOutDelay: 200,
   /** Time after no guide notes until statistics get printed and reset */
   playingBreakThreshold: 3000, // in ms
 }

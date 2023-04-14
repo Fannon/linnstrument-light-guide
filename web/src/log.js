@@ -14,6 +14,7 @@ export const log = {
   },
   error: (msg) => {
     console.error(msg)
+    const logEntry = document.createElement("div");
     logEntry.classList = 'log-entry log-error'
     logEntry.innerHTML = `<small class="text-muted">${getTime()}</small> <span class="msg">${msg}</span>`;
     document.getElementById("log").prepend(logEntry);
