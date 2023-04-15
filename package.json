@@ -1,6 +1,6 @@
 {
   "name": "linnstrument-light-guide",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Light Guide support for the LinnStrument, e.g. for Synthesia.",
   "main": "index.js",
   "scripts": {

@@ -8,7 +8,15 @@ import { resetGrid, getGridDict, generateGrid, drawGrid } from "./grid.js";
 const ext = {
   config: {},
   history: {
-    playedNotes: []
+    /** Only played note-on messages */
+    playedNotes: [],
+    /** All incoming MIDI input message */
+    midiInput: {
+      file: null,
+      track: null,
+      tick: 0,
+      tickTimer: null,
+    },
   },
   stats: {
     guideNoteTimings: [],
@@ -42,11 +50,15 @@ async function init() {
 
   // Infer current layout / transposition from LinnStrument directly
   await updateLayoutFromLinnStrument()
-
-  setInterval(async () => {
+  
+  // Periodically sync state between LinnStrument, app and player
+  setInterval(() => {
     checkForStatisticsDump()
-    await updateLayoutFromLinnStrument()
+    checkForMidiDump()
+    void updateLayoutFromLinnStrument()
   }, ext.config.updateStateInterval);
+
+  createMidiInputRecording()
 }
 
 async function setupGrid() {
@@ -74,8 +86,8 @@ async function registerUiEvents() {
   }, 200));
 
   // Enable tooltips
-  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl)
   })
 }
@@ -93,17 +105,40 @@ async function registerMidiEvents() {
     try {
       log.info(`Connecting LinnStrument MIDI Input: ${ext.config.instrumentInputPort}`)
       ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
-      ext.input.addListener("noteon", (note) => {
-        const noteNumber = note.dataBytes[0]
+      ext.input.addListener("noteon", (msg) => {
+        const noteNumber = msg.dataBytes[0]
         ext.history.playedNotes.push({
           time: Date.now(),
-          noteNumber: note.note.number,
+          noteNumber: msg.note.number,
         })
         highlightVisualization(noteNumber, ext.config.playedHighlightColor)
+
+        // Add it to MIDI input recording
+        const jzzMsg = JZZ.MIDI.noteOn(msg.message.channel, msg.note.number, msg.rawVelocity)
+        ext.history.midiInput.track.add(ext.history.midiInput.tick, jzzMsg);
       });
-      ext.input.addListener("noteoff", (note) => {
-        highlightVisualization(note.dataBytes[0], 0)
+      ext.input.addListener("noteoff", (msg) => {
+        highlightVisualization(msg.dataBytes[0], 0)
+
+        // Add it to MIDI input recording
+        const jzzMsg = JZZ.MIDI.noteOff(msg.message.channel, msg.note.number, msg.rawVelocity)
+        ext.history.midiInput.track.add(ext.history.midiInput.tick, jzzMsg);
       });
+      ext.input.addListener("controlchange", (msg) => {
+        // Filter out the LinnStrument control (NRPN / RPN) messages
+        const ignoredSubTypes = [
+          "dataentrycoarse", "dataentryfine", 
+          "registeredparametercoarse", "registeredparameterfine",
+          "nonregisteredparametercoarse", "nonregisteredparameterfine",
+        ]
+        // Add it to MIDI input recording
+        if (!ignoredSubTypes.includes(msg.subtype)) {
+          console.log(msg.subtype, msg)
+          const jzzMsg = JZZ.MIDI.control(msg.message.channel, msg.controller.number, msg.rawValue)
+          ext.history.midiInput.track.add(ext.history.midiInput.tick, jzzMsg);
+        }
+      })
+
     } catch (err) {
       log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       log.error(err.toString())
@@ -158,8 +193,6 @@ async function registerMidiEvents() {
       ext.lightGuideInput.addListener("keyaftertouch", async (msg) => {
         // Add note number offset for ONE Smart Piano 
         const noteNumber = msg.dataBytes[0] + 21
-
-        console.log(`Light Guide AT`, noteNumber, msg.value, msg.dataBytes)
 
         if (msg.value > 0) {
           highlightInstrument(noteNumber, ext.config.guideHighlightColor)
@@ -287,6 +320,9 @@ async function updateLayoutFromLinnStrument() {
   // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
   let rowOffset = await getLinnStrumentParamValue(227);
 
+  // Get current BPM
+  ext.config.bpm = await getLinnStrumentParamValue(238);
+
   if (rowOffset === 0) {
     rowOffset = ext.config.linnStrumentSize / 8
   }
@@ -344,7 +380,6 @@ async function measureNoteTiming(noteNumber) {
     });
     if (earlyNote) {
       pastTimeOffset = earlyNote.time - now
-      console.log('Found in history', earlyNote, pastTimeOffset)
       if (Math.abs(pastTimeOffset) <= ext.config.delayedNoteThreshold) {
         // If note is played within `delayedNoteThreshold`, consider it a match right away
         result.timingOffset = pastTimeOffset
@@ -353,7 +388,6 @@ async function measureNoteTiming(noteNumber) {
         // If found within `missedNoteThreshold`, mark it as possible match
         // but keep looking into future for more precise match
         foundMatch = true
-        console.log('Found in history', pastTimeOffset)
       }
     }
 
@@ -519,14 +553,64 @@ function calculateStatistics() {
 function checkForStatisticsDump() {
   if (ext.stats.guideNoteTimings.length > 0) {
     const lastItem = ext.stats.guideNoteTimings.slice(-1)[0] 
-    if (lastItem.time < Date.now() - ext.config.playingBreakThreshold) {
+    if (lastItem.time < Date.now() - ext.config.guideNotesPausedThreshold) {
       console.debug('Guide Note Timings', ext.stats.guideNoteTimings)
-      console.debug('Played Note History', ext.history.playedNotes)
       calculateStatistics()
       ext.stats.guideNoteTimings = []
+    }
+  }
+}
+
+function checkForMidiDump() {
+  if (ext.history.playedNotes.length > 0) {
+    const lastItem = ext.history.playedNotes.slice(-1)[0] 
+    if (lastItem.time < Date.now() - ext.config.playedNotesPausedThreshold) {
+      console.debug('Played Note History', ext.history.playedNotes)
+      exportMidiInputRecording()
+      createMidiInputRecording()
       ext.history.playedNotes = []
     }
   }
+}
+
+function createMidiInputRecording() {
+
+  const tickResolution = 96 // ticks per quarter note
+
+  // https://www.npmjs.com/package/jzz-midi-smf
+  ext.history.midiInput.file = new JZZ.MIDI.SMF(0, tickResolution); // type 0, 96 ticks per quarter note
+  ext.history.midiInput.track = new JZZ.MIDI.SMF.MTrk();
+  ext.history.midiInput.file.push(ext.history.midiInput.track);
+  
+  ext.history.midiInput.track.add(0, JZZ.MIDI.smfSeqName(`Recording: ${new Date().toISOString()}`))
+  ext.history.midiInput.track.add(0, JZZ.MIDI.smfBPM(ext.config.bpm));
+
+  const tickInterval = 60000 / ext.config.bpm / 96
+  ext.history.midiInput.tick = 0;
+  ext.history.midiInput.tick = setInterval(() => {
+    ext.history.midiInput.tick += 1
+  }, tickInterval);
+  
+}
+
+function exportMidiInputRecording() {
+  ext.history.midiInput.track.add(ext.history.midiInput.tick, JZZ.MIDI.smfEndOfTrack());
+
+  const smf = ext.history.midiInput.file
+
+  const fileName = new Date().toISOString().split(':').join('-').split('T').join('_').split('.')[0] + '.mid'
+  // var base64EncodedStr = btoa(unescape(encodeURIComponent(smf.dump())));
+  var base64EncodedStr = btoa(smf.dump());
+
+  const a = document.body.appendChild(
+    document.createElement("a")
+  );
+  a.download = fileName;
+  a.href = "data:audio/midi;base64," + base64EncodedStr;
+  a.innerHTML = fileName;
+
+  log.info('Played Notes MIDI: ' + a.outerHTML)
+
 }
 
 /**
