@@ -39,7 +39,7 @@ export const defaultConfig = {
   guideNoteStaticsFadeOut: 1500,
   /** Time after no guide notes until statistics get printed and reset */
   guideNotesPausedThreshold: 3000, // in ms
-  playedNotesPausedThreshold: 3000, // in ms
+  playedNotesPausedThreshold: 3200, // in ms
   /** BPM is necessary for MIDI recordings */
   bpm: 120,
 }

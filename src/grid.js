@@ -1,4 +1,4 @@
-import { highlightInstrumentXY, highlightVisualization } from "./main.js"
+import { highlightInstrumentXY } from "./main.js"
 
 /**
  * Calculate the grid for the LinnStrument
