@@ -38,7 +38,10 @@ export const defaultConfig = {
   /** How long the guide note feedback stays visible (colorized border around the cell) (in ms) */
   guideNoteStaticsFadeOut: 1500,
   /** Time after no guide notes until statistics get printed and reset */
-  playingBreakThreshold: 3000, // in ms
+  guideNotesPausedThreshold: 3000, // in ms
+  playedNotesPausedThreshold: 3000, // in ms
+  /** BPM is necessary for MIDI recordings */
+  bpm: 120,
 }
 
 export function initConfig() {
