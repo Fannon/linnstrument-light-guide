@@ -49,13 +49,21 @@ async function init() {
   log.info(`Successfully initialized.`)
 
   // Infer current layout / transposition from LinnStrument directly
-  await updateLayoutFromLinnStrument()
+  await getStateFromLinnStrument()
   
   // Periodically sync state between LinnStrument, app and player
+  let warned = false
   setInterval(() => {
     checkForStatisticsDump()
     checkForMidiDump()
-    void updateLayoutFromLinnStrument()
+    try {
+      void getStateFromLinnStrument()
+    } catch (err) {
+      if (!warned) {
+        log.warn('Could not get state from LinnStrument, please adjust config manually.')
+        warned = true;
+      }
+    }
   }, ext.config.updateStateInterval);
 
   createMidiInputRecording()
@@ -311,7 +319,7 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
   }
 }
 
-async function updateLayoutFromLinnStrument() {
+async function getStateFromLinnStrument() {
 
   // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
   const splitLeftOctave = await getLinnStrumentParamValue(36);
@@ -335,7 +343,7 @@ async function updateLayoutFromLinnStrument() {
     ext.config.startNoteNumber = startNoteNumber
     setupGrid()
     updateSettingsInUI(ext.config)
-    log.info(`Detected layout change in LinnStrument: startNoteNumber=${startNoteNumber} rowOffset=${rowOffset}`)
+    log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
   }
 }
 
@@ -350,7 +358,7 @@ async function getLinnStrumentParamValue(paramNumber) {
     }, { duration: 200 })
     setTimeout(() => {
       reject(new Error(`Timeout when getting NRPN value readout`))
-    }, 300);
+    }, 100);
   });
 }
 
