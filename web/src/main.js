@@ -381,7 +381,6 @@ async function getLinnStrumentParamValue(paramNumber) {
   });
 }
 
-
 function clearLog() {
   document.getElementById("log").innerHTML = ''
 }
@@ -432,9 +431,3 @@ function debounce(func, time) {
     timer = setTimeout(func, time, event);
   };
 }
-
-const sleep = (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};

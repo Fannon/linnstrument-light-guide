@@ -44,6 +44,8 @@ It can play chords but also patterns based on the chords.
   * Load a VSTi of your choice and use the MIDI Thru port as input, e.g. `Loop Forward A`
 * Tip: Also add some drums or other backing track elements and use your DAW time, play and stop controls. 
 
+![Scaler 2 in DAW](./assets/scaler2.png)
+
 ### Synthesia
 
 Setting this up with Synthesia is a big fiddly, as it needs a few MIDI loop devices to route MIDI information from and to the right places.
