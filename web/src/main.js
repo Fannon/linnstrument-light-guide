@@ -373,13 +373,13 @@ async function getLinnStrumentParamValue(paramNumber) {
   return new Promise((resolve, reject) => {
     ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
     ext.input.channels[1].addListener("nrpn", (msg) => {
-      // console.debug(`NRPN Return`, msg.message.data, msg)
+      console.debug(`NRPN Return`, msg.message.data, msg)
       if (msg.message.dataBytes[0] === 38) {
         return resolve(msg.message.dataBytes[1])
       }
     }, { duration: timeout })
     setTimeout(() => {
-      reject(new Error(`Timeout when getting NRPN value readout`))
+      return reject(new Error(`Timeout when getting NRPN value readout`))
     }, timeout);
   });
 }
