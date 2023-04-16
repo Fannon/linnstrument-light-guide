@@ -341,30 +341,35 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
 async function getStateFromLinnStrument() {
 
   if (ext.output) {
-    // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
-    const splitLeftOctave = await getLinnStrumentParamValue(36);
-    // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
-    const splitLeftTranspose = await getLinnStrumentParamValue(37);
-    // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
-    let rowOffset = await getLinnStrumentParamValue(227);
+    try {
+      // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
+      const splitLeftOctave = await getLinnStrumentParamValue(36);
+      // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
+      const splitLeftTranspose = await getLinnStrumentParamValue(37);
+      // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
+      let rowOffset = await getLinnStrumentParamValue(227);
 
-    // Get current BPM
-    ext.config.bpm = await getLinnStrumentParamValue(238);
+      // Get current BPM
+      ext.config.bpm = await getLinnStrumentParamValue(238);
 
-    if (rowOffset === 0) {
-      rowOffset = ext.config.linnStrumentSize / 8
+      if (rowOffset === 0) {
+        rowOffset = ext.config.linnStrumentSize / 8
+      }
+
+      let startNoteNumber = 30 + (-7 + splitLeftTranspose)
+      startNoteNumber += (-5 + splitLeftOctave) * 12
+
+      if (ext.config.rowOffset !== rowOffset || ext.config.startNoteNumber !== startNoteNumber) {
+        ext.config.rowOffset = rowOffset
+        ext.config.startNoteNumber = startNoteNumber
+        setupGrid()
+        updateSettingsInUI(ext.config)
+        log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
+      }
+    } catch (err) {
+      console.warn(`Could not get state from LinnStrument.`)
     }
 
-    let startNoteNumber = 30 + (-7 + splitLeftTranspose)
-    startNoteNumber += (-5 + splitLeftOctave) * 12
-
-    if (ext.config.rowOffset !== rowOffset || ext.config.startNoteNumber !== startNoteNumber) {
-      ext.config.rowOffset = rowOffset
-      ext.config.startNoteNumber = startNoteNumber
-      setupGrid()
-      updateSettingsInUI(ext.config)
-      log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
-    }
   }
 }
 
@@ -373,13 +378,13 @@ async function getLinnStrumentParamValue(paramNumber) {
   return new Promise((resolve, reject) => {
     ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
     ext.input.channels[1].addListener("nrpn", (msg) => {
-      // console.debug(`NRPN Return`, msg.message.data, msg)
+      console.debug(`NRPN Return`, msg.message.data, msg)
       if (msg.message.dataBytes[0] === 38) {
         return resolve(msg.message.dataBytes[1])
       }
     }, { duration: timeout })
     setTimeout(() => {
-      reject(new Error(`Timeout when getting NRPN value readout`))
+      return reject(new Error(`Timeout when getting NRPN value readout`))
     }, timeout);
   });
 }
