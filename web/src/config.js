@@ -9,6 +9,7 @@ export const defaultConfig = {
   lightGuideInputPort: 'Loop Back C',
   forwardPort1: 'Loop Forward A',
   forwardPort2: 'Loop Forward B',
+  instrumentInputPort2: '',
 
   //////////////////////////////////////////
   // General Options                      //
@@ -120,6 +121,15 @@ export function updateSettingsInUI(config) {
     } 
     document.getElementById('forwardPort2').add(option)
   });
+  // instrumentInputPort2
+  WebMidi.outputs.forEach((device) => {
+    const option = document.createElement("option");
+    option.text = device.name; 
+    if (config.instrumentInputPort2 === device.name) {
+      option.selected = true
+    } 
+    document.getElementById('instrumentInputPort2').add(option)
+  });
 }
 
 export function saveConfig(config, event) {
@@ -140,6 +150,7 @@ export function saveConfig(config, event) {
   config.lightGuideInputPort = document.getElementById("lightGuideInputPort").value;
   config.forwardPort1 = document.getElementById("forwardPort1").value;
   config.forwardPort2 = document.getElementById("forwardPort2").value;
+  config.instrumentInputPort2 = document.getElementById("instrumentInputPort2").value;
 
   localStorage.setItem("config", JSON.stringify(config));
   location.reload()

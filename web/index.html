@@ -10,12 +10,13 @@
   
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link href="./lib/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/style.css?v=2" />
 
-  <script src="./lib/bootstrap.bundle.min.js"></script>
+  <script src="./lib/bootstrap.bundle.min.js?v=2"></script>
   <script src="./lib/webmidi.iife.min.js"></script>
   <script src="./lib/JZZ.js"></script>
   <script src="./lib/JZZ.midi.SMF.js"></script>
+  <script src="./src/main.js" type="module"></script>
 </head>
 
 <body>
@@ -24,7 +25,7 @@
       <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
         <a href="https://fannon.github.io/linnstrument-light-guide/" class="d-flex align-items-center text-dark text-decoration-none">
           <title>LinnStrument Light Guide</title> 
-          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.1.9</small></span>
+          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.2.0</small></span>
         </a>
 
         <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
@@ -63,13 +64,13 @@
             <div class="card-body">
               <form>
                 <label for="startNoteNumber" class="form-label">Start MIDI Note Number</label>
-                <input id="startNoteNumber" class="form-control" type="text" placeholder="30" data-bs-toggle="tooltip" data-bs-placement="top" title="MIDI Note Number for the first pad in the bottom left corner. Should be auto-detected and synced from LinnStrument settings.">
+                <input id="startNoteNumber" class="form-control" type="text" placeholder="30" data-bs-toggle="tooltip" data-bs-placement="right" title="MIDI Note Number for the first pad in the bottom left corner. Should be auto-detected and synced from LinnStrument settings.">
 
                 <label for="rowOffset" class="form-label">Row Offset</label>
-                <input id="rowOffset" class="form-control" type="text" placeholder="5"  data-bs-toggle="tooltip" data-bs-placement="top" title="Row Offset. Should be auto-detected and synced from LinnStrument settings.">
+                <input id="rowOffset" class="form-control" type="text" placeholder="5"  data-bs-toggle="tooltip" data-bs-placement="right" title="Row Offset. Should be auto-detected and synced from LinnStrument settings.">
 
                 <label for="guideHighlightColor" class="form-label">Light Guide Note Color</label>
-                <select id="guideHighlightColor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="top" title="Color for Light Guide highlights on LinnStrument and visualization.">
+                <select id="guideHighlightColor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="right" title="Color for Light Guide highlights on LinnStrument and visualization.">
                   <option value="7">Off</option>
                   <option value="0" selected>As set in Note Lights settings</option>
                   <option value="1">Red</option>
@@ -85,7 +86,7 @@
                 </select>
 
                 <label for="playedHighlightColor" class="form-label">Played Guide Note Color</label>
-                <select id="playedHighlightColor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="top" title="Color for played note highlights on visualization. Does not change the LinnStrument setting.">
+                <select id="playedHighlightColor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="right" title="Color for played note highlights on visualization. Does not change the LinnStrument setting.">
                   <option value="7">Off</option>
                   <option value="0" selected>As set in Note Lights settings</option>
                   <option value="1">Red</option>
@@ -101,16 +102,16 @@
                 </select>
 
                 <label for="linnStrumentSize" class="form-label">LinnStrument Size</label>
-                <select id="linnStrumentSize" class="form-select">
+                <select id="linnStrumentSize" class="form-select" data-bs-toggle="tooltip" data-bs-placement="right" title="Select size of your LinnStrument.">
                   <option selected>128</option>
                   <option>200</option>
                 </select>
 
-                <label for="delayedNoteThreshold" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Below this timing offset, a note is considered in-time. Above, its considered early or late.">Delayed Note Threshold (ms)</label>
-                <input id="delayedNoteThreshold" class="form-control" type="text" placeholder="1">
+                <label for="delayedNoteThreshold" class="form-label">Delayed Note Threshold (ms)</label>
+                <input id="delayedNoteThreshold" class="form-control" type="text" placeholder="1" data-bs-toggle="tooltip" data-bs-placement="right" title="Below this timing offset, a note is considered in-time. Above, its considered early or late.">
 
-                <label for="missedNoteThreshold" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Above this timing offset, a note is consider a missed note.">Missed Note Threshold (ms)</label>
-                <input id="missedNoteThreshold" class="form-control" type="text" placeholder="1">
+                <label for="missedNoteThreshold" class="form-label">Missed Note Threshold (ms)</label>
+                <input id="missedNoteThreshold" class="form-control" type="text" placeholder="1" data-bs-toggle="tooltip" data-bs-placement="right" title="Above this timing offset, a note is consider a missed note.">
 
               </form>
             </div>
@@ -121,36 +122,40 @@
             <div class="card-header">MIDI Port Configuration</div>
             <div class="card-body">
               <form>
-                <label for="instrumentInputPort" class="form-label"><strong>Input</strong>: LinnStrument</label>
-                <select id="instrumentInputPort" class="form-select">
+                <label for="instrumentInputPort" class="form-label"><strong>Input</strong>: Instrument</label>
+                <select id="instrumentInputPort" class="form-select" data-bs-toggle="tooltip" data-bs-placement="left" title="Select your Instrument / LinnStrument MIDI Input port for receiving played notes.">
                   <option value=""></option>
                 </select>
 
-                <label for="instrumentOutputPort" class="form-label"><strong>Output</strong>: LinnStrument</label>
-                <select id="instrumentOutputPort" class="form-select">
+                <label for="instrumentOutputPort" class="form-label"><strong>Output</strong>: Instrument</label>
+                <select id="instrumentOutputPort" class="form-select" data-bs-toggle="tooltip" data-bs-placement="left" title="Select your Instrument / LinnStrument MIDI Output port for sending guide note highlights and other MIDI requests to it (e.g. to sync layout).">
                   <option value=""></option>
                 </select>
 
                 <label for="lightGuideInputPort" class="form-label"><strong>Input</strong>: Light
                   Guide <small class="text-muted">(optional)</small></label>
-                <select id="lightGuideInputPort" class="form-select">
+                <select id="lightGuideInputPort" class="form-select" data-bs-toggle="tooltip" data-bs-placement="left" title="Select your Light Guide MIDI Input port for receiving guide notes. Usually this needs to be done via a virtual MIDI Loop port.">
                   <option value=""></option>
                 </select>
 
                 <label for="forwardPort1" class="form-label"><strong>Forward</strong>: MIDI Thru 1 <small
                     class="text-muted">(optional)</small>
                 </label>
-                <select id="forwardPort1" class="form-select">
+                <select id="forwardPort1" class="form-select" data-bs-toggle="tooltip" data-bs-placement="left" title="MIDI Thru port (1/2), where input from the instrument is forwarded to.">
                   <option value=""></option>
                 </select>
-                <!-- <div class="form-text">Forwards LinnStrument MIDI to this port.</div> -->
 
                 <label for="forwardPort2" class="form-label"><strong>Forward</strong>: MIDI Thru 2 <small
                     class="text-muted">(optional)</small></label>
-                <select id="forwardPort2" class="form-select">
+                <select id="forwardPort2" class="form-select" data-bs-toggle="tooltip" data-bs-placement="left" title="MIDI Thru port (1/2), where input from the instrument is forwarded to.">
                   <option value=""></option>
                 </select>
-                <!-- <div class="form-text">Forwards LinnStrument MIDI to this port (optional).</div> -->
+
+                <label for="instrumentInputPort2" class="form-label"><strong>Input</strong>: Instrument 2 <small
+                    class="text-muted">(optional)</small></label>
+                <select id="instrumentInputPort2" class="form-select" data-bs-toggle="tooltip" data-bs-placement="left" title="Optional second instrument input. This can be useful, e.g. when foot pedals are sent via own MIDI device.">
+                  <option value=""></option>
+                </select>
               </form>
             </div>
           </div>
@@ -168,10 +173,6 @@
       </div>
     </main>
   </div>
-  <script src="./src/main.js" type="module"></script>
-  <style>
-
-  </style>
 </body>
 
 </html>

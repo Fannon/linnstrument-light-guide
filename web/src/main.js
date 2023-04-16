@@ -172,12 +172,67 @@ async function registerMidiEvents() {
       log.success(`Connected to Instrument MIDI Input: ${ext.config.instrumentInputPort}`)
 
     } catch (err) {
-      log.error(`Could not connect to Instrument MIDI Input: ${ext.config.lightGuideInputPort}`)
+      log.error(`Could not connect to Instrument MIDI Input: ${ext.config.instrumentInputPort}`)
       console.error(err)
     }
   } else {
     log.error(`No Instrument MIDI Input given.`)
   }
+
+  //////////////////////////////////////////
+  // INSTRUMENT 2 INPUT                     //
+  //////////////////////////////////////////
+
+  // TODO: This is mostly copy'n'pasted from above. Could be refactored to be nicer.
+  if (ext.config.instrumentInputPort2) {
+    try {
+      ext.input2 = WebMidi.getInputByName(ext.config.instrumentInputPort2)
+      if (!ext.input2) {
+        throw new Error('Could not connect to Instrument 2 MIDI Input')
+      }
+      ext.input2.addListener("noteon", (msg) => {
+        const noteNumber = msg.dataBytes[0]
+        ext.history.playedNotes.push({
+          time: performance.now(),
+          noteNumber: msg.note.number,
+        })
+        highlightVisualization(noteNumber, ext.config.playedHighlightColor)
+
+        // Add it to MIDI input recording
+        const jzzMsg = JZZ.MIDI.noteOn(msg.message.channel, msg.note.number, msg.rawVelocity)
+        ext.recording.midiInput.track.add(ext.recording.tick, jzzMsg);
+      });
+      ext.input2.addListener("noteoff", (msg) => {
+        highlightVisualization(msg.dataBytes[0], 0)
+
+        // Add it to MIDI input recording
+        const jzzMsg = JZZ.MIDI.noteOff(msg.message.channel, msg.note.number, msg.rawVelocity)
+        ext.recording.midiInput.track.add(ext.recording.tick, jzzMsg);
+      });
+      ext.input2.addListener("controlchange", (msg) => {
+        // Filter out NRPN / RPN messages
+        const ignoredSubTypes = [
+          "dataentrycoarse", "dataentryfine", 
+          "registeredparametercoarse", "registeredparameterfine",
+          "nonregisteredparametercoarse", "nonregisteredparameterfine",
+        ]
+        // Add it to MIDI input recording
+        if (!ignoredSubTypes.includes(msg.subtype)) {
+          const jzzMsg = JZZ.MIDI.control(msg.message.channel, msg.controller.number, msg.rawValue)
+          ext.recording.midiInput.track.add(ext.recording.tick, jzzMsg);
+        }
+      })
+
+      log.success(`Connected to Instrument 2 MIDI Input: ${ext.config.instrumentInputPort2}`)
+
+    } catch (err) {
+      log.error(`Could not connect to Instrument 2 MIDI Input: ${ext.config.instrumentInputPort2}`)
+      console.error(err)
+    }
+  } else {
+    log.error(`No Instrument 2 MIDI Input given.`)
+  }
+
 
   //////////////////////////////////////////
   // INSTRUMENT OUTPUT                    //
@@ -275,6 +330,9 @@ async function registerMidiEvents() {
           throw new Error('Could not connect to Forward MIDI Port 1')
         }
         ext.input.addForwarder(ext.forwardPort1)
+        if (ext.input2) {
+          ext.input2.addForwarder(ext.forwardPort1)
+        }
         log.success(`Connected MIDI Forward Port 1: ${ext.config.forwardPort1}`)
       } catch (err) {
         log.warn(`Could not connect to optional Forward Port 1: ${ext.config.forwardPort1}`)
@@ -287,6 +345,9 @@ async function registerMidiEvents() {
           throw new Error('Could not connect to Forward MIDI Port 1')
         }
         ext.input.addForwarder(ext.forwardPort2)
+        if (ext.input2) {
+          ext.input2.addForwarder(ext.forwardPort2)
+        }
         log.success(`Connected MIDI Forward Port 2: ${ext.config.forwardPort2}`)
       } catch (err) {
         log.warn(`Could not connect to optional Forward Port 2: ${ext.config.forwardPort2}`)
