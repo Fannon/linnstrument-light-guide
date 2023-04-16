@@ -53,7 +53,9 @@ async function init() {
   await setupGrid()
 
   // Put LinnStrument out of User Firmware Mode (if it still is)
-  ext.output.sendNrpnValue(nrpn(245), nrpn(0), { channels: 1 });
+  if (ext.output) {
+    ext.output.sendNrpnValue(nrpn(245), nrpn(0), { channels: 1 });
+  }
 
   log.info(`Successfully initialized.`)
 
@@ -151,7 +153,6 @@ async function registerMidiEvents() {
         ]
         // Add it to MIDI input recording
         if (!ignoredSubTypes.includes(msg.subtype)) {
-          console.log(msg.subtype, msg)
           const jzzMsg = JZZ.MIDI.control(msg.message.channel, msg.controller.number, msg.rawValue)
           ext.recording.midiInput.track.add(ext.recording.tick, jzzMsg);
         }
@@ -178,7 +179,7 @@ async function registerMidiEvents() {
       log.error(`Could not open Instrument Output Port: ${ext.config.instrumentInputPort}`)
     }
   } else {
-    log.warn(`No Instrument Output Port given. Without this, Light Guide highlighting will not work.`)
+    log.warn(`No Instrument Output Port given. Without this, Light Guide highlighting and layout detection will not work.`)
   }
 
   //////////////////////////////////////////
@@ -339,29 +340,31 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
 
 async function getStateFromLinnStrument() {
 
-  // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
-  const splitLeftOctave = await getLinnStrumentParamValue(36);
-  // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
-  const splitLeftTranspose = await getLinnStrumentParamValue(37);
-  // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
-  let rowOffset = await getLinnStrumentParamValue(227);
+  if (ext.output) {
+    // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
+    const splitLeftOctave = await getLinnStrumentParamValue(36);
+    // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
+    const splitLeftTranspose = await getLinnStrumentParamValue(37);
+    // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
+    let rowOffset = await getLinnStrumentParamValue(227);
 
-  // Get current BPM
-  ext.config.bpm = await getLinnStrumentParamValue(238);
+    // Get current BPM
+    ext.config.bpm = await getLinnStrumentParamValue(238);
 
-  if (rowOffset === 0) {
-    rowOffset = ext.config.linnStrumentSize / 8
-  }
+    if (rowOffset === 0) {
+      rowOffset = ext.config.linnStrumentSize / 8
+    }
 
-  let startNoteNumber = 30 + (-7 + splitLeftTranspose)
-  startNoteNumber += (-5 + splitLeftOctave) * 12
+    let startNoteNumber = 30 + (-7 + splitLeftTranspose)
+    startNoteNumber += (-5 + splitLeftOctave) * 12
 
-  if (ext.config.rowOffset !== rowOffset || ext.config.startNoteNumber !== startNoteNumber) {
-    ext.config.rowOffset = rowOffset
-    ext.config.startNoteNumber = startNoteNumber
-    setupGrid()
-    updateSettingsInUI(ext.config)
-    log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
+    if (ext.config.rowOffset !== rowOffset || ext.config.startNoteNumber !== startNoteNumber) {
+      ext.config.rowOffset = rowOffset
+      ext.config.startNoteNumber = startNoteNumber
+      setupGrid()
+      updateSettingsInUI(ext.config)
+      log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
+    }
   }
 }
 
