@@ -42,6 +42,8 @@ export const defaultConfig = {
   playedNotesPausedThreshold: 3200, // in ms
   /** BPM is necessary for MIDI recordings */
   bpm: 120,
+  /** Highlight note timings on LinnStrument */ // TODO: This feature is not really reliable and needs own state
+  highlightNoteTimingOnInstrument: false,
 }
 
 export function initConfig() {
