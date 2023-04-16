@@ -81,34 +81,35 @@ export async function measureNoteTiming(noteNumber) {
  */
 export function logGuideNoteTiming(entry) {
   ext.stats.guideNoteTimings.push(entry)
+  const offset = Math.round(entry.timingOffset)
 
-  if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
+  if (Math.abs(offset) > ext.config.missedNoteThreshold) {
     log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-danger">MISSED</span>`)
-  } else if (Math.abs(entry.timingOffset) <= ext.config.delayedNoteThreshold) {
-    if (entry.timingOffset < 0) {
-      log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">${entry.timingOffset}ms</span>`)
+  } else if (Math.abs(offset) <= ext.config.delayedNoteThreshold) {
+    if (offset < 0) {
+      log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">${offset}ms</span>`)
     } else {
-      log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">+${entry.timingOffset}ms</span>`)
+      log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-success">+${offset}ms</span>`)
     }
-  } else if (entry.timingOffset < 0) {
-    log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-info">${entry.timingOffset}ms</span>`)
+  } else if (offset < 0) {
+    log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-info">${offset}ms</span>`)
   } else {
-    log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-primary">+${entry.timingOffset}ms</span>`)
+    log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-primary">+${offset}ms</span>`)
   }
 
   const pads = document.getElementsByClassName(`note-number-${entry.noteNumber}`)
   for (const pad of pads) {
-    if (Math.abs(entry.timingOffset) > ext.config.missedNoteThreshold) {
+    if (Math.abs(offset) > ext.config.missedNoteThreshold) {
       pad.classList.add("played-out-of-time");
       setTimeout(() => {
         pad.classList.remove("played-out-of-time");
       }, ext.config.guideNoteStaticsFadeOut)
-    } else if (Math.abs(entry.timingOffset) <= ext.config.delayedNoteThreshold) {
+    } else if (Math.abs(offset) <= ext.config.delayedNoteThreshold) {
       pad.classList.add("played-in-time");
       setTimeout(() => {
         pad.classList.remove("played-in-time");
       }, ext.config.guideNoteStaticsFadeOut)
-    } else if (entry.timingOffset < 0) {
+    } else if (offset < 0) {
       pad.classList.add("played-early");
       setTimeout(() => {
         pad.classList.remove("played-early");
