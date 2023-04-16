@@ -79,9 +79,7 @@ async function init() {
     checkForMidiDump()
     try {
       await getStateFromLinnStrument()
-    } catch (err) {
-      console.warn('Could not get state from LinnStrument, please adjust config manually.')
-    }
+    } catch (ignore) {}
   }, 100);
 
   createMidiInputRecording()
@@ -402,6 +400,7 @@ async function getStateFromLinnStrument() {
     } catch (err) {
       console.warn(`Could not get state from LinnStrument, please adjust config manually.`)
       ext.device.linnStrument.lastStateUpdate = performance.now() + 3000
+      throw err
     }
   } else {
     console.warn(`Cannot get state from LinnStrument because instrument input or output device is missing.`)
@@ -411,7 +410,6 @@ async function getStateFromLinnStrument() {
 
 async function getLinnStrumentParamValue(paramNumber) {
   const timeout = 300
-  console.log('getLinnStrumentParamValue', paramNumber)
   if (!ext.input) {
     log.warn('Cannot getLinnStrumentParamValue, because no input device')
     return
