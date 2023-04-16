@@ -24,12 +24,17 @@ export const ext = {
     /** guide notes incoming MIDI input message */
     guideInput: {
       file: null,
-      track: null
+      track: null,
     },
   },
   stats: {
     guideNoteTimings: [],
   },
+  device: {
+    linnStrument: {
+      lastStateUpdate: null,
+    }
+  }
 }
 window.ext = ext
 
@@ -67,15 +72,17 @@ async function init() {
   }
   
   // Periodically sync state between LinnStrument, app and player
+  // This runs every 100ms, but the real intervals are checked by the functions
+  // and is different for each functionality
   setInterval(async () => {
     checkForStatisticsDump()
     checkForMidiDump()
     try {
-      // await getStateFromLinnStrument()
+      await getStateFromLinnStrument()
     } catch (err) {
       console.warn('Could not get state from LinnStrument, please adjust config manually.')
     }
-  }, ext.config.updateStateInterval);
+  }, 100);
 
   createMidiInputRecording()
 }
@@ -123,8 +130,10 @@ async function registerMidiEvents() {
 
   if (ext.config.instrumentInputPort) {
     try {
-      log.info(`Connecting LinnStrument MIDI Input: ${ext.config.instrumentInputPort}`)
       ext.input = WebMidi.getInputByName(ext.config.instrumentInputPort)
+      if (!ext.input) {
+        throw new Error('Could not connect to Instrument MIDI Input')
+      }
       ext.input.addListener("noteon", (msg) => {
         const noteNumber = msg.dataBytes[0]
         ext.history.playedNotes.push({
@@ -160,13 +169,14 @@ async function registerMidiEvents() {
         }
       })
 
+      log.success(`Connected to Instrument MIDI Input: ${ext.config.instrumentInputPort}`)
+
     } catch (err) {
-      log.error(err.toString())
-      log.error(`Connected to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
+      log.error(`Could not connect to Instrument MIDI Input: ${ext.config.lightGuideInputPort}`)
       console.error(err)
     }
   } else {
-    log.error(`No Instrument Input Port given.`)
+    log.error(`No Instrument MIDI Input given.`)
   }
 
   //////////////////////////////////////////
@@ -176,12 +186,16 @@ async function registerMidiEvents() {
   if (ext.config.instrumentOutputPort) {
     try {
       ext.output = WebMidi.getOutputByName(ext.config.instrumentOutputPort)
-      log.info(`Connected to LinnStrument MIDI Output: ${ext.config.instrumentOutputPort}`)
+      if (!ext.output) {
+        throw new Error('Could not connect to instrument MIDI Output')
+      }
+      log.success(`Connected to LinnStrument MIDI Output: ${ext.config.instrumentOutputPort}`)
     } catch (err) {
-      log.error(`Could not open Instrument Output Port: ${ext.config.instrumentInputPort}`)
+      log.warn(`Could not connect to Instrument MIDI Output: ${ext.config.instrumentInputPort}`)
+      console.warn(err)
     }
   } else {
-    log.warn(`No Instrument Output Port given. Without this, Light Guide highlighting and layout detection will not work.`)
+    log.warn(`No Instrument MIDI Output given. Without this, Light Guide highlighting and layout detection will not work.`)
   }
 
   //////////////////////////////////////////
@@ -190,8 +204,11 @@ async function registerMidiEvents() {
 
   if (ext.config.lightGuideInputPort) {
     try {
-      log.info(`Connecting Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
       ext.lightGuideInput = WebMidi.getInputByName(ext.config.lightGuideInputPort)
+
+      if (!ext.lightGuideInput) {
+        throw new Error('Could not connect to Light Guide MIDI Input')
+      }
 
       // Support "typical" Light Guide where noteon / noteoff MIDI events are used
       ext.lightGuideInput.addListener("noteon", async (msg) => {
@@ -236,9 +253,10 @@ async function registerMidiEvents() {
         }
       });
 
+      log.success(`Connected to Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
+
     } catch (err) {
-      log.error(`Connected to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
-      log.error(err.toString())
+      log.error(`Could not connect to Light Guide MIDI Input: ${ext.config.lightGuideInputPort}`)
       console.error(err)
     }
   } else {
@@ -253,19 +271,25 @@ async function registerMidiEvents() {
     if (ext.config.forwardPort1) {
       try {
         ext.forwardPort1 = WebMidi.getOutputByName(ext.config.forwardPort1)
+        if (!ext.forwardPort1) {
+          throw new Error('Could not connect to Forward MIDI Port 1')
+        }
         ext.input.addForwarder(ext.forwardPort1)
-        log.info(`Connecting MIDI Forward Port 1: ${ext.config.forwardPort1}`)
+        log.success(`Connected MIDI Forward Port 1: ${ext.config.forwardPort1}`)
       } catch (err) {
-        log.warn(`Could not open optional Forward Port 1: ${ext.config.forwardPort1}`)
+        log.warn(`Could not connect to optional Forward Port 1: ${ext.config.forwardPort1}`)
       }
     }
     if (ext.config.forwardPort2) {
       try {
         ext.forwardPort2 = WebMidi.getOutputByName(ext.config.forwardPort2)
+        if (!ext.forwardPort2) {
+          throw new Error('Could not connect to Forward MIDI Port 1')
+        }
         ext.input.addForwarder(ext.forwardPort2)
-        log.info(`Connecting MIDI Forward Port 2: ${ext.config.forwardPort2}`)
+        log.success(`Connected MIDI Forward Port 2: ${ext.config.forwardPort2}`)
       } catch (err) {
-        log.warn(`Could not open optional Forward Port 2: ${ext.config.forwardPort2}`)
+        log.warn(`Could not connect to optional Forward Port 2: ${ext.config.forwardPort2}`)
       }
     }
   } else {
@@ -294,7 +318,7 @@ export function highlightInstrument(noteNumber, color) {
 /**
  * Highlight pads on instrument by x / y coordinates and color
  * 
- * Will only work if we have Instrument Output port
+ * Will only work if we have Instrument MIDI Output
  */
 export function highlightInstrumentXY(x, y, color) {
   if (ext.output) {
@@ -342,7 +366,12 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
 
 async function getStateFromLinnStrument() {
 
-  if (ext.output) {
+  if (ext.device.linnStrument.lastStateUpdate && performance.now() - ext.config.updateInstrumentStateInterval <= ext.device.linnStrument.lastStateUpdate) {
+    return
+  }
+  ext.device.linnStrument.lastStateUpdate = performance.now()
+  
+  if (ext.output && ext.input) {
     try {
       // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
       const splitLeftOctave = await getLinnStrumentParamValue(36);
@@ -368,16 +397,25 @@ async function getStateFromLinnStrument() {
         updateSettingsInUI(ext.config)
         log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
       }
+      ext.device.linnStrument.lastStateUpdate = performance.now()
+      warn = false
     } catch (err) {
       console.warn(`Could not get state from LinnStrument, please adjust config manually.`)
-      throw err
+      ext.device.linnStrument.lastStateUpdate = performance.now() + 3000
     }
+  } else {
+    console.warn(`Cannot get state from LinnStrument because instrument input or output device is missing.`)
+    ext.device.linnStrument.lastStateUpdate = performance.now() + 3000
   }
 }
 
 async function getLinnStrumentParamValue(paramNumber) {
   const timeout = 300
   console.log('getLinnStrumentParamValue', paramNumber)
+  if (!ext.input) {
+    log.warn('Cannot getLinnStrumentParamValue, because no input device')
+    return
+  }
   return promiseTimeout(timeout, new Promise((resolve) => {
     ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
     ext.input.channels[1].addListener("nrpn", (msg) => {
