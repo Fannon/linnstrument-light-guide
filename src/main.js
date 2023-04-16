@@ -379,9 +379,7 @@ async function getLinnStrumentParamValue(paramNumber) {
   const timeout = 300
   console.log('getLinnStrumentParamValue', paramNumber)
   return promiseTimeout(timeout, new Promise((resolve) => {
-    console.log('ask for ', nrpn(paramNumber))
     ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
-    console.log(ext.input)
     ext.input.channels[1].addListener("nrpn", (msg) => {
       console.debug(`NRPN Return`, msg.message.data, msg)
       if (msg.message.dataBytes[0] === 38) {
