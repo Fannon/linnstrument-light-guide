@@ -1,4 +1,5 @@
 import { ext } from './main.js'
+import { log } from './log.js'
 
 /**
  * Records MIDI input for later export to MIDI files

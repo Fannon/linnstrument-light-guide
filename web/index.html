@@ -7,7 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>LinnStrument Light Guide</title>
-
+  
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <link rel="stylesheet" href="./css/style.css" />
@@ -23,7 +24,7 @@
       <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
         <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
           <title>LinnStrument Light Guide</title> 
-          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.1.1</small></span>
+          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.1.2</small></span>
         </a>
 
         <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
@@ -44,11 +45,11 @@
       <br />
       <div class="row">
         <div class="col-6 text-start">
-          <button type="button" id="reset-grid" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Resets all highlights on the visualization and the LinnStrument.">Reset Grid</button>
           <button type="button" id="save" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="top" title="After changing any of the below settings, press Save & Apply.">Save & Apply Config</button>
           <button type="button" id="reset" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Reset Config to defaults, in case there are issues.">Reset Config</button>
         </div>
         <div class="col-6 text-end">
+          <button type="button" id="reset-grid" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Resets all highlights on the visualization and the LinnStrument.">Reset Grid</button>
           <button id="calculate-statistics" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculates statistics on how the played notes compare against the Light Guide notes. This also happens automatically after some play breaks.">Calculate Statistics</button>
           <button id="clear-history" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Clears history, recordings and statistics.">Clear History</button>
           <button id="clear-log" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Clear the log below.">Clear Log</button>
@@ -121,19 +122,20 @@
             <div class="card-body">
               <form>
                 <label for="instrumentInputPort" class="form-label"><strong>Input</strong>: LinnStrument</label>
-                <select id="instrumentInputPort" class="form-select"></select>
-                <!-- <div class="form-text">Select LinnStrument input MIDI port</div> -->
+                <select id="instrumentInputPort" class="form-select">
+                  <option value=""></option>
+                </select>
 
                 <label for="instrumentOutputPort" class="form-label"><strong>Output</strong>: LinnStrument</label>
-                <select id="instrumentOutputPort" class="form-select"></select>
-                <!-- <div class="form-text">Select LinnStrument output MIDI port</div> -->
+                <select id="instrumentOutputPort" class="form-select">
+                  <option value=""></option>
+                </select>
 
                 <label for="lightGuideInputPort" class="form-label"><strong>Input</strong>: Light
                   Guide <small class="text-muted">(optional)</small></label>
                 <select id="lightGuideInputPort" class="form-select">
                   <option value=""></option>
                 </select>
-                <!-- <div class="form-text">MIDI port for incoming Light Guide MIDI notes.</div> -->
 
                 <label for="forwardPort1" class="form-label"><strong>Forward</strong>: MIDI Thru 1 <small
                     class="text-muted">(optional)</small>
