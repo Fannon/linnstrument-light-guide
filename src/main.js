@@ -163,7 +163,7 @@ async function registerMidiEvents() {
           const jzzMsg = JZZ.MIDI.control(msg.message.channel, msg.controller.number, msg.rawValue)
           ext.recording.midiInput.track.add(ext.recording.tick, jzzMsg);
         } else {
-          log.debug(msg)
+          console.debug(msg)
         }
       })
 
