@@ -24,7 +24,7 @@
       <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
         <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
           <title>LinnStrument Light Guide</title> 
-          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.1.6</small></span>
+          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.1.7</small></span>
         </a>
 
         <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
@@ -46,10 +46,10 @@
       <div class="row">
         <div class="col-6 text-start">
           <button type="button" id="save" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="top" title="After changing any of the below settings, press Save & Apply.">Save & Apply Config</button>
-          <button type="button" id="reset" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Reset Config to defaults, in case there are issues.">Reset Config</button>
+          <button type="button" id="reset-config" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Reset Config to defaults, in case there are issues.">Reset Config</button>
         </div>
         <div class="col-6 text-end">
-          <button type="button" id="reset-grid" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Resets all highlights on the visualization and the LinnStrument.">Reset Grid</button>
+          <button id="reset-state" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Resets all state (incl. highlights) on the visualization and the LinnStrument.">Reset State</button>
           <button id="calculate-statistics" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculates statistics on how the played notes compare against the Light Guide notes. This also happens automatically after some play breaks.">Calculate Statistics</button>
           <button id="clear-history" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Clears history, recordings and statistics.">Clear History</button>
           <button id="clear-log" type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Clear the log below.">Clear Log</button>

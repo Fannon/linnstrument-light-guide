@@ -34,6 +34,14 @@ export const ext = {
     linnStrument: {
       lastStateUpdate: null,
     }
+  },
+  fn: {
+    resetGrid,
+    resetConfig,
+    init,
+    resetLinnStrumentState: resetState,
+    clearLog,
+    clearHistory,
   }
 }
 window.ext = ext
@@ -56,11 +64,6 @@ async function init() {
 
   // Setup Grid
   await setupGrid()
-
-  // Put LinnStrument out of User Firmware Mode (if it still is)
-  if (ext.output) {
-    ext.output.sendNrpnValue(nrpn(245), nrpn(0), { channels: 1 });
-  }
 
   log.info(`Successfully initialized.`)
 
@@ -100,7 +103,8 @@ async function registerUiEvents() {
   document.getElementById("save").addEventListener("click", (event) => {
     saveConfig(ext.config, event)
   });
-  document.getElementById("reset").addEventListener("click", resetConfig);
+  document.getElementById("reset-config").addEventListener("click", resetConfig);
+  document.getElementById("reset-state").addEventListener("click", resetState);
   document.getElementById("clear-log").addEventListener("click", clearLog);
   document.getElementById("clear-history").addEventListener("click", clearHistory);
   document.getElementById("calculate-statistics").addEventListener("click", calculateStatistics);
@@ -162,8 +166,6 @@ async function registerMidiEvents() {
         if (!ignoredSubTypes.includes(msg.subtype)) {
           const jzzMsg = JZZ.MIDI.control(msg.message.channel, msg.controller.number, msg.rawValue)
           ext.recording.midiInput.track.add(ext.recording.tick, jzzMsg);
-        } else {
-          console.debug(msg)
         }
       })
 
@@ -396,7 +398,6 @@ async function getStateFromLinnStrument() {
         log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
       }
       ext.device.linnStrument.lastStateUpdate = performance.now()
-      warn = false
     } catch (err) {
       console.warn(`Could not get state from LinnStrument, please adjust config manually.`)
       ext.device.linnStrument.lastStateUpdate = performance.now() + 3000
@@ -423,6 +424,18 @@ async function getLinnStrumentParamValue(paramNumber) {
       }
     }, { duration: timeout })
   }))
+}
+
+async function resetState() {
+  // Put LinnStrument out of User Firmware Mode (if it still is)
+  if (ext.output) {
+    ext.output.sendNrpnValue(nrpn(245), nrpn(1), { channels: 1 });
+    sleep(100)
+    ext.output.sendNrpnValue(nrpn(245), nrpn(0), { channels: 1 });
+    sleep(100)
+    resetGrid()
+    log.success(`Successfully reset LinnStrument and app state.`)
+  }
 }
 
 function clearLog() {
@@ -475,6 +488,12 @@ function debounce(func, time) {
     timer = setTimeout(func, time, event);
   };
 }
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
 
 /**
  * https://italonascimento.github.io/applying-a-timeout-to-your-promises/
