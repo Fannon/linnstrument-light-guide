@@ -1,4 +1,4 @@
-import { ext } from './main.js'
+import { ext, highlightInstrument } from './main.js'
 import { log } from './log.js'
 
 /**
@@ -101,23 +101,31 @@ export function logGuideNoteTiming(entry) {
   for (const pad of pads) {
     if (Math.abs(offset) > ext.config.missedNoteThreshold) {
       pad.classList.add("played-out-of-time");
+      highlightInstrument(entry.noteNumber, 1)
       setTimeout(() => {
         pad.classList.remove("played-out-of-time");
+        highlightInstrument(entry.noteNumber, 0)
       }, ext.config.guideNoteStaticsFadeOut)
     } else if (Math.abs(offset) <= ext.config.delayedNoteThreshold) {
       pad.classList.add("played-in-time");
+      highlightInstrument(entry.noteNumber, 3)
       setTimeout(() => {
         pad.classList.remove("played-in-time");
+        highlightInstrument(entry.noteNumber, 0)
       }, ext.config.guideNoteStaticsFadeOut)
     } else if (offset < 0) {
       pad.classList.add("played-early");
+      highlightInstrument(entry.noteNumber, 9)
       setTimeout(() => {
         pad.classList.remove("played-early");
+        highlightInstrument(entry.noteNumber, 9)
       }, ext.config.guideNoteStaticsFadeOut)
     } else {
       pad.classList.add("played-late");
+      highlightInstrument(entry.noteNumber, 11)
       setTimeout(() => {
         pad.classList.remove("played-late");
+        highlightInstrument(entry.noteNumber, 0)
       }, ext.config.guideNoteStaticsFadeOut)
     }
   }
