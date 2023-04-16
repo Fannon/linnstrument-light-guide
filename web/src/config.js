@@ -36,7 +36,7 @@ export const defaultConfig = {
   updateInstrumentStateInterval: 500, // in ms
   guideNoteStatistics: true,
   /** How long the guide note feedback stays visible (colorized border around the cell) (in ms) */
-  guideNoteStaticsFadeOut: 1500,
+  guideNoteStaticsFadeOut: 800,
   /** Time after no guide notes until statistics get printed and reset */
   guideNotesPausedThreshold: 3000, // in ms
   playedNotesPausedThreshold: 3200, // in ms
