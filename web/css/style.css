@@ -21,6 +21,9 @@
   border-radius: 3px;
   margin-bottom: 3px;
 }
+.log-success .msg {
+  color: #35c10e;
+}
 .log-warn .msg {
   color: #ef9d08;
 }
