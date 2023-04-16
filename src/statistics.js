@@ -1,4 +1,5 @@
 import { ext } from './main.js'
+import { log } from './log.js'
 
 /**
  * Measure how the guide note is actually played
