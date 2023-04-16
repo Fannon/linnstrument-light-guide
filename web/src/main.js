@@ -60,20 +60,20 @@ async function init() {
   log.info(`Successfully initialized.`)
 
   // Infer current layout / transposition from LinnStrument directly
-  await getStateFromLinnStrument()
+  try {
+    await getStateFromLinnStrument()
+  } catch (err) {
+    log.warn('Could not get state from LinnStrument, please adjust config manually.')
+  }
   
   // Periodically sync state between LinnStrument, app and player
-  let warned = false
-  setInterval(() => {
+  setInterval(async () => {
     checkForStatisticsDump()
     checkForMidiDump()
     try {
-      void getStateFromLinnStrument()
+      // await getStateFromLinnStrument()
     } catch (err) {
-      if (!warned) {
-        log.warn('Could not get state from LinnStrument, please adjust config manually.')
-        warned = true;
-      }
+      console.warn('Could not get state from LinnStrument, please adjust config manually.')
     }
   }, ext.config.updateStateInterval);
 
@@ -155,6 +155,8 @@ async function registerMidiEvents() {
         if (!ignoredSubTypes.includes(msg.subtype)) {
           const jzzMsg = JZZ.MIDI.control(msg.message.channel, msg.controller.number, msg.rawValue)
           ext.recording.midiInput.track.add(ext.recording.tick, jzzMsg);
+        } else {
+          log.debug(msg)
         }
       })
 
@@ -341,47 +343,52 @@ export function highlightVisualization(noteNumber, color, type = "played", big =
 async function getStateFromLinnStrument() {
 
   if (ext.output) {
-    // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
-    const splitLeftOctave = await getLinnStrumentParamValue(36);
-    // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
-    const splitLeftTranspose = await getLinnStrumentParamValue(37);
-    // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
-    let rowOffset = await getLinnStrumentParamValue(227);
+    try {
+      // Split Left Octave (0: —5, 1: -4, 2: -3, 3: -2, 4: -1, 5: 0, 6: +1, 7: +2, 8: +3, 9: +4. 10: +5)
+      const splitLeftOctave = await getLinnStrumentParamValue(36);
+      // Split Left Transpose Pitch (0-6: -7 to -1, 7: 0, 8-14: +1 to +7)
+      const splitLeftTranspose = await getLinnStrumentParamValue(37);
+      // Global Row Offset (only supports, 0: No overlap, 3 4 5 6 7 12: Intervals, 13: Guitar, 127: 0 offset)
+      let rowOffset = await getLinnStrumentParamValue(227);
 
-    // Get current BPM
-    ext.config.bpm = await getLinnStrumentParamValue(238);
+      // Get current BPM
+      ext.config.bpm = await getLinnStrumentParamValue(238);
 
-    if (rowOffset === 0) {
-      rowOffset = ext.config.linnStrumentSize / 8
-    }
+      if (rowOffset === 0) {
+        rowOffset = ext.config.linnStrumentSize / 8
+      }
 
-    let startNoteNumber = 30 + (-7 + splitLeftTranspose)
-    startNoteNumber += (-5 + splitLeftOctave) * 12
+      let startNoteNumber = 30 + (-7 + splitLeftTranspose)
+      startNoteNumber += (-5 + splitLeftOctave) * 12
 
-    if (ext.config.rowOffset !== rowOffset || ext.config.startNoteNumber !== startNoteNumber) {
-      ext.config.rowOffset = rowOffset
-      ext.config.startNoteNumber = startNoteNumber
-      setupGrid()
-      updateSettingsInUI(ext.config)
-      log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
+      if (ext.config.rowOffset !== rowOffset || ext.config.startNoteNumber !== startNoteNumber) {
+        ext.config.rowOffset = rowOffset
+        ext.config.startNoteNumber = startNoteNumber
+        setupGrid()
+        updateSettingsInUI(ext.config)
+        log.info(`Detected state from LinnStrument: startNoteNumber=${startNoteNumber}, rowOffset=${rowOffset}, bpm=${ext.config.bpm}`)
+      }
+    } catch (err) {
+      console.warn(`Could not get state from LinnStrument, please adjust config manually.`)
+      throw err
     }
   }
 }
 
 async function getLinnStrumentParamValue(paramNumber) {
-  const timeout = 250
-  return new Promise((resolve, reject) => {
+  const timeout = 300
+  console.log('getLinnStrumentParamValue', paramNumber)
+  return promiseTimeout(timeout, new Promise((resolve) => {
+    console.log('ask for ', nrpn(paramNumber))
     ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
+    console.log(ext.input)
     ext.input.channels[1].addListener("nrpn", (msg) => {
       console.debug(`NRPN Return`, msg.message.data, msg)
       if (msg.message.dataBytes[0] === 38) {
         return resolve(msg.message.dataBytes[1])
       }
     }, { duration: timeout })
-    setTimeout(() => {
-      return reject(new Error(`Timeout when getting NRPN value readout`))
-    }, timeout);
-  });
+  }))
 }
 
 function clearLog() {
@@ -433,4 +440,24 @@ function debounce(func, time) {
     if (timer) clearTimeout(timer);
     timer = setTimeout(func, time, event);
   };
+}
+
+/**
+ * https://italonascimento.github.io/applying-a-timeout-to-your-promises/
+ */
+function promiseTimeout(ms, promise) {
+
+  // Create a promise that rejects in <ms> milliseconds
+  let timeout = new Promise((resolve, reject) => {
+    let id = setTimeout(() => {
+      clearTimeout(id);
+      reject('Timed out in '+ ms + 'ms.')
+    }, ms)
+  })
+
+  // Returns a race between our timeout and the passed in promise
+  return Promise.race([
+    promise,
+    timeout
+  ])
 }
