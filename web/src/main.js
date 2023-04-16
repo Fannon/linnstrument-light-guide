@@ -418,7 +418,6 @@ async function getLinnStrumentParamValue(paramNumber) {
   return promiseTimeout(timeout, new Promise((resolve) => {
     ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
     ext.input.channels[1].addListener("nrpn", (msg) => {
-      console.debug(`NRPN Return`, msg.message.data, msg)
       if (msg.message.dataBytes[0] === 38) {
         return resolve(msg.message.dataBytes[1])
       }
@@ -460,7 +459,7 @@ function checkForStatisticsDump() {
 }
 
 function checkForMidiDump() {
-  if (ext.history.playedNotes.length > 0) {
+  if (ext.recording.midiInput.track.length > 3) {
     const lastItem = ext.history.playedNotes.slice(-1)[0]
     if (lastItem.time < performance.now() - ext.config.playedNotesPausedThreshold) {
       exportMidiInputRecording()
