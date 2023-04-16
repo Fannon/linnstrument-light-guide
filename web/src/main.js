@@ -161,8 +161,8 @@ async function registerMidiEvents() {
       })
 
     } catch (err) {
-      log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       log.error(err.toString())
+      log.error(`Connected to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       console.error(err)
     }
   } else {
@@ -175,8 +175,8 @@ async function registerMidiEvents() {
 
   if (ext.config.instrumentOutputPort) {
     try {
-      log.info(`Connecting LinnStrument MIDI Output: ${ext.config.instrumentOutputPort}`)
       ext.output = WebMidi.getOutputByName(ext.config.instrumentOutputPort)
+      log.info(`Connected to LinnStrument MIDI Output: ${ext.config.instrumentOutputPort}`)
     } catch (err) {
       log.error(`Could not open Instrument Output Port: ${ext.config.instrumentInputPort}`)
     }
@@ -237,7 +237,7 @@ async function registerMidiEvents() {
       });
 
     } catch (err) {
-      log.error(`Could not connect to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
+      log.error(`Connected to Light Guide Input Port: ${ext.config.lightGuideInputPort}`)
       log.error(err.toString())
       console.error(err)
     }
@@ -379,9 +379,7 @@ async function getLinnStrumentParamValue(paramNumber) {
   const timeout = 300
   console.log('getLinnStrumentParamValue', paramNumber)
   return promiseTimeout(timeout, new Promise((resolve) => {
-    console.log('ask for ', nrpn(paramNumber))
     ext.output.sendNrpnValue(nrpn(299), nrpn(paramNumber), { channels: 1 });
-    console.log(ext.input)
     ext.input.channels[1].addListener("nrpn", (msg) => {
       console.debug(`NRPN Return`, msg.message.data, msg)
       if (msg.message.dataBytes[0] === 38) {

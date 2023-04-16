@@ -99,4 +99,5 @@ Have fun :)
 * Install Node.js if not there
 * Check out this repository
 * Run `npm install`
+* Run `npm run build` (to copy over dependencies to webapp)
 * Run `npm start` 
