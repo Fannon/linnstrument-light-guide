@@ -511,7 +511,7 @@ function clearHistory() {
 function checkForStatisticsDump() {
   if (ext.stats.guideNoteTimings.length > 0) {
     const lastItem = ext.stats.guideNoteTimings.slice(-1)[0] 
-    if (lastItem.time < performance.now() - ext.config.guideNotesPausedThreshold) {
+    if (lastItem && lastItem.time < performance.now() - ext.config.guideNotesPausedThreshold) {
       console.debug('Guide Note Timings', ext.stats.guideNoteTimings)
       calculateStatistics()
       ext.stats.guideNoteTimings = []

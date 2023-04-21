@@ -64,7 +64,7 @@ export async function measureNoteTiming(noteNumber) {
       }
     }, ext.config.delayedNoteThreshold / 4);
 
-    setTimeout((timingOffset) => {
+    setTimeout(() => {
       clearInterval(poller);
       if (!foundMatch) {
         return resolve(result)
@@ -72,7 +72,7 @@ export async function measureNoteTiming(noteNumber) {
         result.timingOffset = result.timingOffset || pastTimeOffset || 7777
         return resolve(result)
       }
-    }, timeOut, result.timingOffset);
+    }, timeOut);
   });
 }
 
@@ -97,52 +97,54 @@ export function logGuideNoteTiming(entry) {
     log.info(`Guide Note ${entry.noteIdentifier} <span class="badge bg-primary">+${offset}ms</span>`)
   }
 
-  const pads = document.getElementsByClassName(`note-number-${entry.noteNumber}`)
-  for (const pad of pads) {
-    if (Math.abs(offset) > ext.config.missedNoteThreshold) {
-      pad.classList.add("played-out-of-time");
-      if (ext.config.highlightNoteTimingOnInstrument) {
-        highlightInstrument(entry.noteNumber, 1)
-      }
-      setTimeout(() => {
-        pad.classList.remove("played-out-of-time");
+  if (ext.config.showFeedback) {
+    const pads = document.getElementsByClassName(`note-number-${entry.noteNumber}`)
+    for (const pad of pads) {
+      if (Math.abs(offset) > ext.config.missedNoteThreshold) {
+        pad.classList.add("played-out-of-time");
         if (ext.config.highlightNoteTimingOnInstrument) {
-          highlightInstrument(entry.noteNumber, 0)
+          highlightInstrument(entry.noteNumber, 1)
         }
-      }, ext.config.guideNoteStaticsFadeOut)
-    } else if (Math.abs(offset) <= ext.config.delayedNoteThreshold) {
-      pad.classList.add("played-in-time");
-      if (ext.config.highlightNoteTimingOnInstrument) {
-        highlightInstrument(entry.noteNumber, 3)
-      }
-      setTimeout(() => {
-        pad.classList.remove("played-in-time");
+        setTimeout(() => {
+          pad.classList.remove("played-out-of-time");
+          if (ext.config.highlightNoteTimingOnInstrument) {
+            highlightInstrument(entry.noteNumber, 0)
+          }
+        }, ext.config.guideNoteStaticsFadeOut)
+      } else if (Math.abs(offset) <= ext.config.delayedNoteThreshold) {
+        pad.classList.add("played-in-time");
         if (ext.config.highlightNoteTimingOnInstrument) {
-          highlightInstrument(entry.noteNumber, 0)
+          highlightInstrument(entry.noteNumber, 3)
         }
-      }, ext.config.guideNoteStaticsFadeOut)
-    } else if (offset < 0) {
-      pad.classList.add("played-early");
-      if (ext.config.highlightNoteTimingOnInstrument) {
-        highlightInstrument(entry.noteNumber, 9)
-      }
-      setTimeout(() => {
-        pad.classList.remove("played-early");
+        setTimeout(() => {
+          pad.classList.remove("played-in-time");
+          if (ext.config.highlightNoteTimingOnInstrument) {
+            highlightInstrument(entry.noteNumber, 0)
+          }
+        }, ext.config.guideNoteStaticsFadeOut)
+      } else if (offset < 0) {
+        pad.classList.add("played-early");
         if (ext.config.highlightNoteTimingOnInstrument) {
-          highlightInstrument(entry.noteNumber, 0)
+          highlightInstrument(entry.noteNumber, 9)
         }
-      }, ext.config.guideNoteStaticsFadeOut)
-    } else {
-      pad.classList.add("played-late");
-      if (ext.config.highlightNoteTimingOnInstrument) {
-        highlightInstrument(entry.noteNumber, 11)
-      }
-      setTimeout(() => {
-        pad.classList.remove("played-late");
+        setTimeout(() => {
+          pad.classList.remove("played-early");
+          if (ext.config.highlightNoteTimingOnInstrument) {
+            highlightInstrument(entry.noteNumber, 0)
+          }
+        }, ext.config.guideNoteStaticsFadeOut)
+      } else {
+        pad.classList.add("played-late");
         if (ext.config.highlightNoteTimingOnInstrument) {
-          highlightInstrument(entry.noteNumber, 0)
+          highlightInstrument(entry.noteNumber, 11)
         }
-      }, ext.config.guideNoteStaticsFadeOut)
+        setTimeout(() => {
+          pad.classList.remove("played-late");
+          if (ext.config.highlightNoteTimingOnInstrument) {
+            highlightInstrument(entry.noteNumber, 0)
+          }
+        }, ext.config.guideNoteStaticsFadeOut)
+      }
     }
   }
 

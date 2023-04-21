@@ -16,7 +16,8 @@ export const defaultConfig = {
   //////////////////////////////////////////
 
   playedHighlightColor: 1,
-  guideHighlightColor: 3,
+  guideHighlightColor: 6,
+  showFeedback: 1,
   linnStrumentSize: 128,
   rowOffset: 5,
   colOffset: 1,
@@ -69,6 +70,7 @@ export function updateSettingsInUI(config) {
 
   document.getElementById('startNoteNumber').value = config.startNoteNumber.toString()
   document.getElementById('rowOffset').value = config.rowOffset.toString()
+  document.getElementById('showFeedback').value = config.showFeedback.toString()
   document.getElementById('guideHighlightColor').value = config.guideHighlightColor.toString()
   document.getElementById('playedHighlightColor').value = config.playedHighlightColor.toString()
   document.getElementById('linnStrumentSize').value = config.linnStrumentSize.toString()
@@ -139,6 +141,7 @@ export function saveConfig(config, event) {
 
   config.startNoteNumber = parseInt(document.getElementById("startNoteNumber").value);
   config.rowOffset = parseInt(document.getElementById("rowOffset").value);
+  config.showFeedback = parseInt(document.getElementById("showFeedback").value);
   config.guideHighlightColor = parseInt(document.getElementById("guideHighlightColor").value);
   config.playedHighlightColor = parseInt(document.getElementById("playedHighlightColor").value);
   config.linnStrumentSize = parseInt(document.getElementById("linnStrumentSize").value);

@@ -48,11 +48,9 @@ export function exportMidiInputRecording() {
   const smf = ext.recording.midiInput.file
   const fileName = new Date().toISOString().split(':').join('-').split('T').join('_').split('.')[0] + '-played.mid'
 
-  const instrumentMidiLink = document.body.appendChild(
-    document.createElement("a")
-  );
+  const instrumentMidiLink = document.createElement("a")
   instrumentMidiLink.download = fileName;
-  instrumentMidiLink.href = "data:audio/midi;base64," + btoa(smf.dump());
+  instrumentMidiLink.href = "data:audio/midi;base64," + btoa(smf.dump())
   instrumentMidiLink.innerHTML = fileName;
 
   log.info(`Played Notes MIDI: ${instrumentMidiLink.outerHTML}`)
@@ -63,9 +61,7 @@ export function exportMidiInputRecording() {
   
     const smf2 = ext.recording.guideInput.file
     const fileName2 = new Date().toISOString().split(':').join('-').split('T').join('_').split('.')[0] + '-guide.mid'
-    const guideMidiLink = document.body.appendChild(
-      document.createElement("a")
-    );
+    const guideMidiLink = document.createElement("a")
     guideMidiLink.download = fileName2;
     guideMidiLink.href = "data:audio/midi;base64," + btoa(smf2.dump());
     guideMidiLink.innerHTML = fileName2;
