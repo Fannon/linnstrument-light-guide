@@ -25,7 +25,7 @@
       <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
         <a href="https://fannon.github.io/linnstrument-light-guide/" class="d-flex align-items-center text-dark text-decoration-none">
           <title>LinnStrument Light Guide</title> 
-          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.2.1</small></span>
+          <span id="app-title">LinnStrument Light Guide <small class="text-muted">1.2.2</small></span>
         </a>
 
         <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
@@ -68,6 +68,12 @@
 
                 <label for="rowOffset" class="form-label">Row Offset</label>
                 <input id="rowOffset" class="form-control" type="text" placeholder="5"  data-bs-toggle="tooltip" data-bs-placement="right" title="Row Offset. Should be auto-detected and synced from LinnStrument settings.">
+
+                <label for="showFeedback" class="form-label">Show play statistic feedback</label>
+                <select id="showFeedback" class="form-select" data-bs-toggle="tooltip" data-bs-placement="right" title="If enabled, the feedback from comparing played notes with guide notes is shown on the visualization.">
+                  <option value="0">Off</option>
+                  <option value="1">On</option>
+                </select>
 
                 <label for="guideHighlightColor" class="form-label">Light Guide Note Color</label>
                 <select id="guideHighlightColor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="right" title="Color for Light Guide highlights on LinnStrument and visualization.">
