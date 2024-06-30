@@ -11,10 +11,10 @@
   "author": "Simon Heimler",
   "license": "MIT",
   "dependencies": {
-    "bootstrap": "^5.3.2",
-    "jzz": "^1.7.7",
-    "jzz-midi-smf": "^1.8.4",
-    "webmidi": "^3.1.8"
+    "bootstrap": "^5.3.3",
+    "jzz": "^1.8.5",
+    "jzz-midi-smf": "^1.9.4",
+    "webmidi": "^3.1.9"
   },
   "devDependencies": {
     "gh-pages": "^6.1.1",
