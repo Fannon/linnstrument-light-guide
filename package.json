@@ -12,12 +12,12 @@
   "license": "MIT",
   "dependencies": {
     "bootstrap": "^5.3.3",
-    "jzz": "^1.8.5",
-    "jzz-midi-smf": "^1.9.4",
-    "webmidi": "^3.1.9"
+    "jzz": "^1.8.8",
+    "jzz-midi-smf": "^1.9.7",
+    "webmidi": "^3.1.12"
   },
   "devDependencies": {
-    "gh-pages": "^6.1.1",
+    "gh-pages": "^6.3.0",
     "live-server": "^1.2.2"
   }
 }
